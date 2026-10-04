@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ECF0EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111719" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Japan">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Japan-Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap">
+<style>
+/* Layout: one-column app shell (max 560px). Phrases are shown as Japanese station-name signs (ekimeihyō),
+   the missions form a train line from Dresden to the trip, finished missions earn a station stamp (eki stamp). */
+:root{
+  --bg:#ECF0EE;
+  --surface:#FFFFFF;
+  --ink:#1B2427;
+  --muted:#5B686A;
+  --rule:#D2DAD7;
+  --line:#2C8550;          /* JR-Grün: Linie, primäre Aktion, richtig */
+  --line-soft:#DCEFE3;
+  --on-line:#FFFFFF;
+  --stamp:#6A3E9E;         /* Stempelfarbe */
+  --stamp-soft:#EFE7F8;
+  --bad:#B9420F;
+  --bad-soft:#FBE7DC;
+  --f-jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans",-apple-system,system-ui,sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111719; --surface:#1A2225; --ink:#E7EEEC; --muted:#93A29F; --rule:#2E3A3D;
+    --line:#4DB476; --line-soft:#1E3A2A; --on-line:#0D1A12;
+    --stamp:#B39AE0; --stamp-soft:#2B2338; --bad:#F08A5D; --bad-soft:#3A2219;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#111719; --surface:#1A2225; --ink:#E7EEEC; --muted:#93A29F; --rule:#2E3A3D;
+  --line:#4DB476; --line-soft:#1E3A2A; --on-line:#0D1A12;
+  --stamp:#B39AE0; --stamp-soft:#2B2338; --bad:#F08A5D; --bad-soft:#3A2219;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;
+  padding-inline:16px;padding-top:max(14px, env(safe-area-inset-top, 0px));padding-bottom:110px;-webkit-tap-highlight-color:transparent}
+body.in-session{padding-bottom:max(32px, env(safe-area-inset-bottom, 0px))}
+.app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.25}
+h1{font-family:var(--f-jp);font-size:26px;font-weight:900}
+h2{font-size:15px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+p{margin:0}
+.jp{font-family:var(--f-jp)}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 20px;border-radius:var(--r);
+  border:0;background:var(--line);color:var(--on-line);font-weight:700;font-size:17px;width:100%}
+.btn.ghost{background:var(--surface);color:var(--ink);border:2px solid var(--rule)}
+.btn.small{min-height:42px;font-size:15px;width:auto;padding:0 14px}
+.btn:active{transform:translateY(1px)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > *{flex:1 1 140px}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top-left{display:flex;align-items:center;gap:12px;min-width:0}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--surface);border:2px solid var(--rule);display:grid;place-items:center;font-size:26px;flex:none}
+.iconbtn{width:44px;height:44px;border-radius:50%;border:2px solid var(--rule);background:var(--surface);display:grid;place-items:center;flex:none}
+.iconbtn svg{width:20px;height:20px}
+.countdown{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.countdown .jp{font-weight:700;color:var(--line)}
+
+/* Panel */
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.bar{height:10px;border-radius:6px;background:var(--line-soft);overflow:hidden}
+.bar > span{display:block;height:100%;background:var(--line);border-radius:6px;transition:width .4s}
+.bar-label{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* Length picker */
+.lens{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.len{background:var(--surface);border:2px solid var(--rule);border-radius:var(--r);padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:92px;justify-content:center}
+.len b{font-size:17px}
+.len span{font-size:13px;color:var(--muted)}
+.len.main{background:var(--line);border-color:var(--line);color:var(--on-line)}
+.len.main span{color:var(--on-line);opacity:.85}
+
+/* Route (train line) */
+.route{list-style:none;margin:0;padding:0;position:relative}
+.route::before{content:"";position:absolute;left:19px;top:22px;bottom:22px;width:6px;border-radius:3px;background:var(--rule)}
+.route .fill{position:absolute;left:19px;top:22px;width:6px;border-radius:3px;background:var(--line)}
+.st{position:relative;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:8px 0}
+.st-dot{width:24px;height:24px;margin-left:10px;border-radius:50%;background:var(--surface);border:5px solid var(--rule);position:relative;z-index:1}
+.st.open .st-dot{border-color:var(--line)}
+.st.cur .st-dot{background:var(--line);border-color:var(--line);box-shadow:0 0 0 5px var(--line-soft)}
+.st-body{min-width:0;text-align:left;background:none;border:0;padding:4px 0}
+.st-body b{display:block;font-size:17px}
+.st-body .jp{font-size:14px;color:var(--muted)}
+.st-meta{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.st.locked .st-body b{color:var(--muted)}
+.st-goal .st-dot{border-radius:5px;border-color:var(--stamp)}
+
+/* Stamp */
+.stamp{width:54px;height:54px;border-radius:50%;border:3px double var(--stamp);color:var(--stamp);display:grid;place-items:center;
+  font-family:var(--f-jp);font-weight:900;font-size:13px;line-height:1.05;text-align:center;transform:rotate(-10deg);background:var(--stamp-soft)}
+.stamp.big{width:120px;height:120px;font-size:24px;border-width:6px}
+.stamp.pop{animation:pop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes pop{0%{transform:rotate(-30deg) scale(1.8);opacity:0}100%{transform:rotate(-10deg) scale(1);opacity:1}}
+
+/* Station sign card */
+.sign{background:var(--surface);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.sign-top{padding:20px 16px 14px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.sign-em{font-size:44px;line-height:1.1}
+.sign-jp{font-family:var(--f-jp);font-weight:700;font-size:clamp(28px,8.5vw,46px);line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+.sign-jp.kana{font-size:96px;line-height:1.1}
+.sign-ro{font-size:18px;letter-spacing:.05em;color:var(--muted)}
+.sign-band{background:var(--line);color:var(--on-line);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-weight:700}
+.sign-band .sign-stn{font-size:12px;font-weight:500;opacity:.85;text-align:right}
+.note{font-size:15px;color:var(--muted);padding:0 4px}
+
+/* Session */
+.sess-top{display:flex;align-items:center;gap:12px}
+.sess-top .bar{flex:1}
+.chip{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:var(--stamp-soft);color:var(--stamp)}
+.prompt{font-size:20px;font-weight:700;text-align:center}
+.prompt-de{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 0}
+.prompt-de .em{font-size:52px;line-height:1.1}
+.prompt-de .de{font-size:24px;font-weight:700;text-align:center}
+.play{width:96px;height:96px;border-radius:50%;border:0;background:var(--line);color:var(--on-line);display:grid;place-items:center;margin:8px auto}
+.play svg{width:40px;height:40px}
+.audio-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{min-height:76px;background:var(--surface);border:2px solid var(--rule);border-radius:12px;padding:10px;font-size:17px;line-height:1.3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+.opt .em{font-size:24px}
+.opt .ojp{font-family:var(--f-jp);font-weight:700;font-size:20px}
+.opt .ojp.kana{font-size:40px}
+.opt .oro{font-size:13px;color:var(--muted)}
+.opt.right{border-color:var(--line);background:var(--line-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.feedback{font-weight:700;text-align:center;font-size:18px}
+.feedback.ok{color:var(--line)}
+.feedback.no{color:var(--bad)}
+@media (max-width:360px){.opts{grid-template-columns:1fr}}
+
+/* Profile picker */
+.who{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.who-tile{background:var(--surface);border:2px solid var(--rule);border-radius:var(--r);padding:16px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.who-tile .avatar{width:64px;height:64px;font-size:36px}
+.who-tile b{font-size:18px}
+.who-tile .bar{width:100%}
+.who-tile .small{font-variant-numeric:tabular-nums}
+
+/* Lists */
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden}
+.li{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:0;border-top:1px solid var(--rule);background:none;text-align:left;width:100%}
+.li:first-child{border-top:0}
+.li .em{font-size:26px;text-align:center}
+.li .ljp{font-family:var(--f-jp);font-weight:700;font-size:19px;display:block}
+.li .lro{font-size:14px;color:var(--muted);display:block}
+.li .lde{font-size:15px;display:block}
+.li svg{width:20px;height:20px;color:var(--muted)}
+.kana-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.kana-cell{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:8px 4px;display:flex;flex-direction:column;align-items:center}
+.kana-cell .jp{font-size:30px;font-weight:700;line-height:1.2}
+.kana-cell span:last-child{font-size:13px;color:var(--muted)}
+.search{width:100%;min-height:48px;border-radius:12px;border:2px solid var(--rule);background:var(--surface);color:var(--ink);padding:0 14px;font:inherit}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.fchip{flex:none;border:2px solid var(--rule);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:700}
+.fchip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* Family */
+.fam{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--rule)}
+.fam:first-child{border-top:0}
+.fam-stats{display:flex;gap:14px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.stamps-row{display:flex;gap:6px;flex-wrap:wrap}
+.stamps-row .stamp{width:34px;height:34px;font-size:10px;border-width:2px}
+
+/* Settings */
+.set{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px;border-top:1px solid var(--rule)}
+.set:first-child{border-top:0}
+.set > div{min-width:0}
+.seg{display:flex;border:2px solid var(--rule);border-radius:10px;overflow:hidden;flex:none}
+.seg button{border:0;background:var(--surface);padding:8px 12px;font-size:14px;font-weight:700}
+.seg button.on{background:var(--line);color:var(--on-line)}
+.toggle{width:56px;height:32px;border-radius:16px;border:0;background:var(--rule);position:relative;flex:none}
+.toggle::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:left .2s}
+.toggle.on{background:var(--line)}
+.toggle.on::after{left:28px}
+.banner{background:var(--stamp-soft);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px}
+
+/* Tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--rule);
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px))}
+.tabs-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tab{border:0;background:none;border-radius:12px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:700;color:var(--muted)}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--line);background:var(--line-soft)}
+.foot{font-size:12px;color:var(--muted);text-align:center}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:15px}
+.field input{min-height:52px;border-radius:12px;border:2px solid var(--rule);background:var(--surface);color:var(--ink);padding:0 14px;font:inherit;font-size:17px}
+.err{color:var(--bad);font-weight:700;font-size:15px}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:15px;padding:8px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<nav class="tabs" id="tabs" hidden><div class="tabs-in">
+  <button class="tab" data-act="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H14a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8"/></svg>Lernen</button>
+  <button class="tab" data-act="tab" data-v="sheet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z"/><path d="M8 7h6M8 11h6"/></svg>Spickzettel</button>
+  <button class="tab" data-act="tab" data-v="family"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 20a5.5 5.5 0 0 1 11 0M14 20a3.5 3.5 0 0 1 7 0"/></svg>Familie</button>
+</div></nav>
+
+<script src="supabase.js"></script>
+<script>
+/* Verbindung zur Familien-Datenbank. Der Publishable Key ist für die Nutzung im Browser gedacht;
+   die Daten schützt die Row-Level-Security in Supabase (nur der Familien-Login liest und schreibt). */
+const CONFIG = {
+  supabaseUrl: 'https://onnbhqwscdvmivxeijdc.supabase.co',
+  supabaseKey: 'sb_publishable_XT9VqeuRUEwjbtLbRx2sDQ_nTo__UG2'
+};
+/* =========================================================================
+   INHALT  - Missionen, Phrasen, Hiragana
+   {name} {kana} {ro} werden pro Profil ersetzt.
+   ========================================================================= */
+const TRIP_START = {y:2027, m:2, d:4};   // Abflug Dresden
+
+const PROFILES = [
+  {id:'georg',     name:'Georg',     kana:'ゲオルク',     ro:'Georuku',    avatar:'🦊'},
+  {id:'susann',    name:'Susann',    kana:'ズザン',       ro:'Zuzan',      avatar:'🐼'},
+  {id:'charlotte', name:'Charlotte', kana:'シャルロッテ', ro:'Sharurotte', avatar:'🐱'},
+  {id:'henriette', name:'Henriette', kana:'ヘンリエッテ', ro:'Henriette',  avatar:'🐰'}
+];
+
+const MISSIONS = [
+  {id:'m1',  no:1,  week:'Woche 1',     title:'Hallo Japan',          jp:'こんにちは',     stamp:'こん\nにちは', ready:true},
+  {id:'m2',  no:2,  week:'Woche 2',     title:'Ich bin …',            jp:'はじめまして',   stamp:'はじめ\nまして', ready:true},
+  {id:'m3',  no:3,  week:'Woche 3',     title:'Zahlen & Yen',         jp:'いくらですか'},
+  {id:'m4',  no:4,  week:'Woche 4',     title:'Konbini',              jp:'コンビニ'},
+  {id:'m5',  no:5,  week:'Woche 5',     title:'Restaurant I',         jp:'いらっしゃいませ'},
+  {id:'m6',  no:6,  week:'Woche 6',     title:'Restaurant II',        jp:'おいしい！'},
+  {id:'m7',  no:7,  week:'Woche 7',     title:'Anime-Abend',          jp:'アニメ'},
+  {id:'m8',  no:8,  week:'Woche 8',     title:'Bahnhof & Shinkansen', jp:'しんかんせん'},
+  {id:'m9',  no:9,  week:'Woche 9',     title:'Nach dem Weg fragen',  jp:'どこですか'},
+  {id:'m10', no:10, week:'Woche 10',    title:'Hotel & Ryokan',       jp:'りょかん'},
+  {id:'m11', no:11, week:'Woche 11',    title:'Kyoto & Geburtstag',   jp:'おたんじょうび'},
+  {id:'m12', no:12, week:'Woche 12–13', title:'Ferien-Sprint',        jp:'がんばって'},
+  {id:'m13', no:13, week:'Woche 14',    title:'Okinawa',              jp:'めんそーれ'},
+  {id:'m14', no:14, week:'Woche 15',    title:'Einkaufen & Souvenirs',jp:'おみやげ'},
+  {id:'m15', no:15, week:'Woche 16',    title:'Hilfe & Notfall',      jp:'たすけて'},
+  {id:'m16', no:16, week:'Woche 17',    title:'Generalprobe',         jp:'じゅんびOK'}
+];
+
+// type 'p' = Phrase, 'k' = Hiragana
+const ITEMS = [
+  // ---------- Mission 1: Hallo Japan ----------
+  {id:'m1-konnichiwa', type:'p', m:'m1', em:'👋', jp:'こんにちは', ro:'konnichiwa', de:'Hallo / Guten Tag',
+    note:'Tagsüber, ungefähr von 10 bis 18 Uhr. Das letzte は spricht man „wa“.'},
+  {id:'m1-ohayo', type:'p', m:'m1', em:'🌅', jp:'おはようございます', ro:'ohayō gozaimasu', de:'Guten Morgen',
+    note:'Bis etwa 10 Uhr. Unter Freunden und in der Familie reicht おはよう (ohayō).'},
+  {id:'m1-konbanwa', type:'p', m:'m1', em:'🌙', jp:'こんばんは', ro:'konbanwa', de:'Guten Abend',
+    note:'Ab dem Abend, auch beim Betreten eines Restaurants.'},
+  {id:'m1-arigato', type:'p', m:'m1', em:'🙏', jp:'ありがとうございます', ro:'arigatō gozaimasu', de:'Vielen Dank',
+    note:'Die wichtigste Phrase der Reise. Mit kleiner Verbeugung wirkt sie doppelt.'},
+  {id:'m1-sumimasen', type:'p', m:'m1', em:'🙋', jp:'すみません', ro:'sumimasen', de:'Entschuldigung',
+    note:'Universalwort: um Verzeihung bitten, jemanden ansprechen und im Restaurant die Bedienung rufen.'},
+  {id:'m1-hai', type:'p', m:'m1', em:'✅', jp:'はい', ro:'hai', de:'Ja',
+    note:'Heißt oft auch nur „Ich höre zu“.'},
+  {id:'m1-iie', type:'p', m:'m1', em:'❌', jp:'いいえ', ro:'iie', de:'Nein',
+    note:'Klingt recht direkt. Höflicher ablehnen geht mit だいじょうぶです.'},
+  {id:'m1-daijobu', type:'p', m:'m1', em:'👌', jp:'だいじょうぶです', ro:'daijōbu desu', de:'Alles gut / Nein danke',
+    note:'Perfekt im Konbini, wenn man keine Tüte braucht.'},
+  {id:'m1-onegai', type:'p', m:'m1', em:'🤲', jp:'おねがいします', ro:'onegaishimasu', de:'Bitte (wenn man um etwas bittet)',
+    note:'Zeigen und おねがいします sagen: so bestellt man fast alles.'},
+  {id:'m1-dozo', type:'p', m:'m1', em:'💁', jp:'どうぞ', ro:'dōzo', de:'Bitte schön (beim Anbieten)',
+    note:'Wenn man jemandem etwas reicht oder den Vortritt lässt.'},
+  {id:'m1-itadakimasu', type:'p', m:'m1', em:'🍚', jp:'いただきます', ro:'itadakimasu', de:'Guten Appetit (vor dem Essen)',
+    note:'Hände zusammen, kurz nicken, dann essen.'},
+  {id:'m1-gochiso', type:'p', m:'m1', em:'😋', jp:'ごちそうさまでした', ro:'gochisōsama deshita', de:'Danke für das Essen',
+    note:'Nach dem Essen und beim Hinausgehen aus dem Restaurant. Bringt garantiert ein Lächeln.'},
+  {id:'m1-sayonara', type:'p', m:'m1', em:'🚪', jp:'さようなら', ro:'sayōnara', de:'Auf Wiedersehen',
+    note:'Eher förmlich und endgültig. Locker unter Freunden: じゃあね (jā ne).'},
+
+  // ---------- Mission 2: Ich bin … ----------
+  {id:'m2-hajimemashite', type:'p', m:'m2', em:'🤝', jp:'はじめまして', ro:'hajimemashite', de:'Freut mich (beim ersten Treffen)',
+    note:'Der erste Satz, wenn man jemanden kennenlernt.'},
+  {id:'m2-watashi', type:'p', m:'m2', em:'🙂', jp:'わたしは {kana} です', ro:'watashi wa {ro} desu', de:'Ich bin {name}',
+    note:'Dein Name in Katakana: {kana}. Das は spricht man wieder „wa“.'},
+  {id:'m2-doitsu', type:'p', m:'m2', em:'🇩🇪', jp:'ドイツから きました', ro:'doitsu kara kimashita', de:'Ich komme aus Deutschland',
+    note:'ドイツ (doitsu) = Deutschland. Mit ドレスデン (doresuden) geht es genauso.'},
+  {id:'m2-kazoku', type:'p', m:'m2', em:'👨‍👩‍👧‍👧', jp:'わたしたちは かぞく です', ro:'watashitachi wa kazoku desu', de:'Wir sind eine Familie',
+    note:'かぞく (kazoku) = Familie.'},
+  {id:'m2-yoroshiku', type:'p', m:'m2', em:'🙇', jp:'よろしく おねがいします', ro:'yoroshiku onegaishimasu', de:'Schön, Sie kennenzulernen',
+    note:'Schließt jede Vorstellung ab. Dazu eine kleine Verbeugung.'},
+  {id:'m2-sukoshi', type:'p', m:'m2', em:'🤏', jp:'にほんごが すこし わかります', ro:'nihongo ga sukoshi wakarimasu', de:'Ich verstehe ein bisschen Japanisch',
+    note:'Der Satz, nach dem sich die Gesichter verändern.'},
+  {id:'m2-wakarimasen', type:'p', m:'m2', em:'🤷', jp:'わかりません', ro:'wakarimasen', de:'Ich verstehe nicht',
+    note:'Kein Grund zur Panik: danach einfach ゆっくり おねがいします.'},
+  {id:'m2-moichido', type:'p', m:'m2', em:'🔁', jp:'もう いちど おねがいします', ro:'mō ichido onegaishimasu', de:'Noch einmal, bitte',
+    note:'いちど (ichido) = ein Mal.'},
+  {id:'m2-yukkuri', type:'p', m:'m2', em:'🐢', jp:'ゆっくり おねがいします', ro:'yukkuri onegaishimasu', de:'Langsamer, bitte',
+    note:'ゆっくり (yukkuri) = langsam, gemütlich.'},
+  {id:'m2-eigo', type:'p', m:'m2', em:'🇬🇧', jp:'えいごは はなせますか', ro:'eigo wa hanasemasu ka', de:'Sprechen Sie Englisch?',
+    note:'か am Ende macht aus jedem Satz eine Frage.'},
+  {id:'m2-toire', type:'p', m:'m2', em:'🚻', jp:'トイレは どこですか', ro:'toire wa doko desu ka', de:'Wo ist die Toilette?',
+    note:'Klein, aber im Alltag unschlagbar. どこ (doko) = wo.'},
+  {id:'m2-kawaii', type:'p', m:'m2', em:'🐱', jp:'かわいい！', ro:'kawaii!', de:'Süß!',
+    note:'Hört ihr in Japan bestimmt hundertmal am Tag.'},
+
+  // ---------- Hiragana Teil 1 (Mission 1: あ-Reihe, か-Reihe) ----------
+  {id:'k-a',  type:'k', m:'m1', jp:'あ', ro:'a',  tip:'Ein Akrobat schlägt einen Purzelbaum um ein Kreuz: „Aaah!“'},
+  {id:'k-i',  type:'k', m:'m1', jp:'い', ro:'i',  tip:'Zwei Igel-Stacheln nebeneinander: i-i.'},
+  {id:'k-u',  type:'k', m:'m1', jp:'う', ro:'u',  tip:'Ein Ufo mit Antenne obendrauf.'},
+  {id:'k-e',  type:'k', m:'m1', jp:'え', ro:'e',  tip:'Eine Ente mit Federhäubchen, die tanzt.'},
+  {id:'k-o',  type:'k', m:'m1', jp:'お', ro:'o',  tip:'Wie あ, nur mit Ohrring rechts oben: O wie Ohrring.'},
+  {id:'k-ka', type:'k', m:'m1', jp:'か', ro:'ka', tip:'Ein Karate-Kämpfer mit Schwert daneben: Ka!'},
+  {id:'k-ki', type:'k', m:'m1', jp:'き', ro:'ki', tip:'Ein Schlüssel mit zwei Bärten: Ki wie Kiste aufschließen.'},
+  {id:'k-ku', type:'k', m:'m1', jp:'く', ro:'ku', tip:'Ein offener Vogelschnabel ruft: Ku-ckuck!'},
+  {id:'k-ke', type:'k', m:'m1', jp:'け', ro:'ke', tip:'Links ein Stab, rechts eine Krücke: Ke wie Kegel.'},
+  {id:'k-ko', type:'k', m:'m1', jp:'こ', ro:'ko', tip:'Zwei Stäbchen übereinander: Ko wie Kochen.'},
+  // ---------- Hiragana Teil 1 (Mission 2: さ-Reihe, た-Reihe) ----------
+  {id:'k-sa',  type:'k', m:'m2', jp:'さ', ro:'sa',  tip:'Ein Säbel quer, darunter der Griff: Sa!'},
+  {id:'k-shi', type:'k', m:'m2', jp:'し', ro:'shi', tip:'Eine Skipiste: runter und wieder hoch. Gesprochen „schi“.'},
+  {id:'k-su',  type:'k', m:'m2', jp:'す', ro:'su',  tip:'Ein Strick mit Schlaufe: Su wie Suppenkelle am Haken.'},
+  {id:'k-se',  type:'k', m:'m2', jp:'せ', ro:'se',  tip:'Ein Segel mit Mast: Se wie See.'},
+  {id:'k-so',  type:'k', m:'m2', jp:'そ', ro:'so',  tip:'Eine Zickzack-Soßenspur auf dem Teller: So!'},
+  {id:'k-ta',  type:'k', m:'m2', jp:'た', ro:'ta',  tip:'Sieht aus wie ein t und ein a nebeneinander: ta.'},
+  {id:'k-chi', type:'k', m:'m2', jp:'ち', ro:'chi', tip:'Eine gespiegelte 5: Chi wie Chili. Gesprochen „tschi“.'},
+  {id:'k-tsu', type:'k', m:'m2', jp:'つ', ro:'tsu', tip:'Eine Welle: Tsu wie Tsunami.'},
+  {id:'k-te',  type:'k', m:'m2', jp:'て', ro:'te',  tip:'Ein T mit hängendem Ärmel: Te wie Tee.'},
+  {id:'k-to',  type:'k', m:'m2', jp:'と', ro:'to',  tip:'Eine Tomate am Stiel, mit Dorn: To!'}
+];
+
+/* =========================================================================
+   APP
+   ========================================================================= */
+(function(){
+'use strict';
+const app = document.getElementById('app');
+const tabs = document.getElementById('tabs');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const ITEM = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const MIS = Object.fromEntries(MISSIONS.map(m => [m.id, m]));
+
+/* ---------- Datum ---------- */
+const pad = n => String(n).padStart(2, '0');
+const dstr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => dstr(new Date());
+const addDays = (s, n) => { const [y, m, d] = s.split('-').map(Number); return dstr(new Date(y, m - 1, d + n)); };
+function weekKey(date) {
+  date = date || new Date();
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const y0 = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return d.getUTCFullYear() + '-W' + pad(Math.ceil(((d - y0) / 86400000 + 1) / 7));
+}
+function daysToTrip() {
+  const t = new Date();
+  return Math.round((Date.UTC(TRIP_START.y, TRIP_START.m - 1, TRIP_START.d) - Date.UTC(t.getFullYear(), t.getMonth(), t.getDate())) / 86400000);
+}
+function daysLeftInWeek() { const d = new Date().getDay() || 7; return 7 - d; }
+
+/* ---------- Speicher (lokal; Supabase-Sync wird hier angeschlossen) ---------- */
+const KEY = 'japan-trainer.v1';
+let storageOK = true;
+function blankProfile() { return {epoch:0, cards:{}, xp:{}, sess:{}, stamps:[], settings:{romaji:true, goal:400, rate:0.9, t:0}}; }
+function deviceId() {
+  try { let d = localStorage.getItem(KEY + '.device'); if (!d) { d = Math.random().toString(36).slice(2, 10); localStorage.setItem(KEY + '.device', d); } return d; }
+  catch (e) { return 'mem'; }
+}
+const DEV = deviceId();
+// Ältere Datenstände (Vorschau 0.1) in das neue Format bringen
+function migrate(p) {
+  if (!p) return p;
+  p.cards = p.cards || {}; p.stamps = p.stamps || []; p.epoch = p.epoch || 0;
+  p.settings = Object.assign({romaji:true, goal:400, rate:0.9, t:0}, p.settings || {});
+  if (p.xp) Object.keys(p.xp).forEach(k => { if (typeof p.xp[k] === 'number') p.xp[k] = {[DEV]: p.xp[k]}; });
+  p.xp = p.xp || {};
+  if (!p.sess) p.sess = typeof p.sessions === 'number' && p.sessions ? {[DEV]: p.sessions} : {};
+  delete p.sessions; delete p.xpTotal;
+  return p;
+}
+// Zwei Stände desselben Profils zusammenführen (z. B. iPhone und MacBook offline benutzt)
+function mergeProfile(a, b) {
+  if (!a) return b; if (!b) return a;
+  if ((a.epoch || 0) !== (b.epoch || 0)) return (a.epoch || 0) > (b.epoch || 0) ? a : b;
+  const out = blankProfile(); out.epoch = a.epoch || 0;
+  new Set([...Object.keys(a.cards), ...Object.keys(b.cards)]).forEach(id => {
+    const x = a.cards[id], y = b.cards[id];
+    out.cards[id] = !x ? y : !y ? x : ((y.t || 0) > (x.t || 0) ? y : x);
+  });
+  new Set([...Object.keys(a.xp), ...Object.keys(b.xp)]).forEach(w => {
+    const o = {};
+    [a.xp[w] || {}, b.xp[w] || {}].forEach(m => Object.entries(m).forEach(([d, n]) => { o[d] = Math.max(o[d] || 0, n); }));
+    out.xp[w] = o;
+  });
+  [a.sess || {}, b.sess || {}].forEach(m => Object.entries(m).forEach(([d, n]) => { out.sess[d] = Math.max(out.sess[d] || 0, n); }));
+  out.stamps = [...new Set([...(a.stamps || []), ...(b.stamps || [])])];
+  out.settings = (b.settings.t || 0) > (a.settings.t || 0) ? b.settings : a.settings;
+  return JSON.parse(JSON.stringify(out));
+}
+function load() {
+  try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); }
+  catch (e) { storageOK = false; }
+  try { const raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) { storageOK = false; }
+  return null;
+}
+let S = load() || {v:1, profiles:{}, last:null};
+PROFILES.forEach(p => { S.profiles[p.id] = S.profiles[p.id] ? migrate(S.profiles[p.id]) : blankProfile(); });
+function saveLocal() {
+  S.updated = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { storageOK = false; }
+}
+function save() { saveLocal(); if (cur && cur.pid) Sync.push(cur.pid); }
+
+/* ---------- Familien-Sync über Supabase ---------- */
+const Sync = {
+  sb:null, user:null, state:'off', lastAt:null, dirty:new Set(), timer:null, busy:false,
+  init() {
+    if (!CONFIG.supabaseUrl || !window.supabase || !window.supabase.createClient) { this.state = 'off'; render(); return; }
+    try {
+      this.sb = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey,
+        {auth:{persistSession:true, autoRefreshToken:true, storageKey:'japan-trainer.auth'}});
+    } catch (e) { this.state = 'off'; render(); return; }
+    this.sb.auth.onAuthStateChange((ev, session) => { this.user = session ? session.user : null; });
+    this.sb.auth.getSession().then(({data}) => {
+      this.user = data && data.session ? data.session.user : null;
+      this.state = this.user ? 'ok' : 'login';
+      if (cur.screen !== 'session') render();
+      if (this.user) this.pullAll();
+    }).catch(() => { this.state = 'offline'; render(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && this.user) this.pullAll(); });
+    window.addEventListener('online', () => { if (this.user) this.pullAll(); });
+  },
+  async login(email, pw) {
+    const {data, error} = await this.sb.auth.signInWithPassword({email, password:pw});
+    if (error) throw error;
+    this.user = data.user; this.state = 'ok'; S.localOnly = false; saveLocal();
+    await this.pullAll();
+  },
+  async logout() { try { await this.sb.auth.signOut(); } catch (e) {} this.user = null; this.state = 'login'; },
+  async pullAll() {
+    if (!this.user || this.busy) return;
+    this.busy = true;
+    try {
+      const {data, error} = await this.sb.from('progress').select('profile,data');
+      if (error) throw error;
+      const remote = {}; (data || []).forEach(r => { remote[r.profile] = migrate(r.data); });
+      PROFILES.forEach(pr => {
+        const merged = mergeProfile(S.profiles[pr.id], remote[pr.id] || null);
+        if (JSON.stringify(merged) !== JSON.stringify(remote[pr.id] || null)) this.dirty.add(pr.id);
+        S.profiles[pr.id] = merged;
+      });
+      saveLocal(); this.state = 'ok'; this.lastAt = new Date();
+    } catch (e) { this.fail(e); }
+    this.busy = false;
+    if (this.dirty.size) await this.flush();
+    if (cur.screen !== 'session') render(); else this.badge();
+  },
+  push(pid) {
+    if (!this.user) return;
+    this.dirty.add(pid);
+    clearTimeout(this.timer); this.timer = setTimeout(() => this.flush(), 1500);
+  },
+  async flush() {
+    if (!this.user || !this.dirty.size || this.busy) return;
+    this.busy = true;
+    const ids = [...this.dirty];
+    try {
+      const {data, error} = await this.sb.from('progress').select('profile,data').in('profile', ids);
+      if (error) throw error;
+      const remote = {}; (data || []).forEach(r => { remote[r.profile] = migrate(r.data); });
+      const rows = ids.map(id => {
+        S.profiles[id] = mergeProfile(S.profiles[id], remote[id] || null);
+        return {user_id:this.user.id, profile:id, data:S.profiles[id], updated_at:new Date().toISOString()};
+      });
+      const {error:e2} = await this.sb.from('progress').upsert(rows, {onConflict:'user_id,profile'});
+      if (e2) throw e2;
+      ids.forEach(id => this.dirty.delete(id));
+      saveLocal(); this.state = 'ok'; this.lastAt = new Date();
+    } catch (e) { this.fail(e); }
+    this.busy = false;
+    this.badge();
+  },
+  fail(e) { this.err = e; this.state = navigator.onLine === false ? 'offline' : 'error'; },
+  text() {
+    if (S.localOnly || this.state === 'off') return 'Fortschritt liegt nur auf diesem Gerät';
+    if (this.state === 'ok') return this.lastAt ? `Familien-Sync aktiv · zuletzt ${pad(this.lastAt.getHours())}:${pad(this.lastAt.getMinutes())} Uhr` : 'Familien-Sync aktiv';
+    if (this.state === 'offline') return 'Offline · wird automatisch nachgeholt';
+    if (this.state === 'error') return 'Sync gerade nicht möglich · wird später erneut versucht';
+    return 'Nicht angemeldet · Fortschritt bleibt auf diesem Gerät';
+  },
+  badge() { document.querySelectorAll('.sync-text').forEach(el => { el.textContent = this.text(); }); }
+};
+
+/* ---------- Audio (eingebaute japanische Stimme) ---------- */
+const hasTTS = 'speechSynthesis' in window;
+let jaVoice = null;
+function pickVoice() {
+  if (!hasTTS) return null;
+  const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+  const pref = [/kyoko.*(premium|enhanced|erweitert)/i, /(premium|enhanced|erweitert)/i, /kyoko/i, /o-ren|otoya|hattori/i];
+  for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
+  return vs[0] || null;
+}
+if (hasTTS) {
+  jaVoice = pickVoice();
+  speechSynthesis.onvoiceschanged = () => { jaVoice = pickVoice(); if (cur.screen === 'settings') render(); };
+}
+function speak(text, slow) {
+  if (!hasTTS || !text) return;
+  try {
+    if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/[\s　]+/g, ''));
+    u.lang = 'ja-JP';
+    if (jaVoice) u.voice = jaVoice;
+    u.rate = slow ? 0.55 : ((P() && P().settings.rate) || 0.9);
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ---------- Lernlogik ---------- */
+const INTERVALS = [0, 1, 2, 4, 7, 14, 30];   // Tage je Box
+const LEN = {
+  kurz:   {n:12, neu:3,  label:'Kurz',   min:'ca. 5 Min'},
+  normal: {n:28, neu:6,  label:'Normal', min:'ca. 15 Min'},
+  sprint: {n:70, neu:14, label:'Sprint', min:'ca. 45 Min'}
+};
+const XP = {right:10, wrong:2, intro:5};
+
+let cur = {screen: S.last && S.profiles[S.last] ? 'home' : 'pick', pid: S.last || null, sess:null, sheetFilter:'all', sheetQ:'', confirmReset:false};
+const P = () => cur.pid ? S.profiles[cur.pid] : null;
+const PROF = () => PROFILES.find(p => p.id === cur.pid);
+
+function fill(item, prof) {
+  if (!prof || item.type !== 'p') return item;
+  const r = s => s ? s.replace(/\{name\}/g, prof.name).replace(/\{kana\}/g, prof.kana).replace(/\{ro\}/g, prof.ro) : s;
+  return Object.assign({}, item, {jp:r(item.jp), ro:r(item.ro), de:r(item.de), note:r(item.note)});
+}
+function missionItems(mid) { return ITEMS.filter(i => i.m === mid); }
+function missionStats(p, mid) {
+  const its = missionItems(mid); let seen = 0, ok = 0, known = 0;
+  its.forEach(i => { const c = p.cards[i.id]; if (c) { seen++; if (c.box >= 1) ok++; if (c.box >= 2) known++; } });
+  return {n:its.length, seen, ok, known};
+}
+function isUnlocked(p, idx) {
+  const m = MISSIONS[idx];
+  if (!m.ready) return false;
+  if (idx === 0) return true;
+  const st = missionStats(p, MISSIONS[idx - 1].id);
+  return st.n > 0 && st.ok / st.n >= 0.6;
+}
+function knownCount(p) { return ITEMS.filter(i => p.cards[i.id] && p.cards[i.id].box >= 2).length; }
+const sumObj = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
+function weekXP(p) { return sumObj(p.xp[weekKey()]); }
+function totalXP(p) { return Object.values(p.xp).reduce((a, w) => a + sumObj(w), 0); }
+function sessionCount(p) { return sumObj(p.sess); }
+function addXP(p, n) { const k = weekKey(); const w = p.xp[k] || (p.xp[k] = {}); w[DEV] = (w[DEV] || 0) + n; }
+
+function orderedFresh(p) {
+  const out = [];
+  MISSIONS.forEach((m, idx) => {
+    if (!isUnlocked(p, idx)) return;
+    const ph = ITEMS.filter(i => i.m === m.id && i.type === 'p' && !p.cards[i.id]);
+    const ka = ITEMS.filter(i => i.m === m.id && i.type === 'k' && !p.cards[i.id]);
+    while (ph.length || ka.length) {
+      if (ph.length) out.push(ph.shift());
+      if (ph.length) out.push(ph.shift());
+      if (ka.length) out.push(ka.shift());
+    }
+  });
+  return out;
+}
+
+function buildSession(p, len) {
+  const cfg = LEN[len], t = today();
+  const seenItems = ITEMS.filter(i => p.cards[i.id]);
+  const due = seenItems.filter(i => p.cards[i.id].due <= t)
+    .sort((a, b) => (p.cards[a.id].box - p.cards[b.id].box) || (p.cards[a.id].due < p.cards[b.id].due ? -1 : 1));
+  const fresh = orderedFresh(p);
+  const nq = fresh.slice(0, cfg.neu);
+  const rq = due.slice(0, Math.max(cfg.n - nq.length * 2, 4));
+  const seq = [], pend = [];
+  while (nq.length || rq.length || pend.length) {
+    const ready = pend.findIndex(x => x.wait <= 0);
+    if (ready >= 0) { seq.push({kind:'quiz', id:pend.splice(ready, 1)[0].id, mode:'normal'}); }
+    else if (nq.length && (!rq.length || seq.length % 3 !== 2)) {
+      const i = nq.shift(); pend.forEach(x => x.wait--);
+      seq.push({kind:'intro', id:i.id}); pend.push({id:i.id, wait:2}); continue;
+    }
+    else if (rq.length) { seq.push({kind:'quiz', id:rq.shift().id, mode:'normal'}); }
+    else { seq.push({kind:'quiz', id:pend.shift().id, mode:'normal'}); continue; }
+    pend.forEach(x => x.wait--);
+  }
+  // Auffüllen: erst weitere neue Inhalte (nicht bei "Kurz"), dann Übung mit bekannten Karten
+  const used = new Set(seq.map(s => s.id));
+  if (len !== 'kurz') {
+    fresh.slice(cfg.neu, cfg.neu * 2).forEach(i => {
+      if (seq.length >= cfg.n - 1) return;
+      seq.push({kind:'intro', id:i.id}); seq.push({kind:'quiz', id:i.id, mode:'normal'}); used.add(i.id);
+    });
+  }
+  const practice = shuffle(seenItems.filter(i => !used.has(i.id))).sort((a, b) => p.cards[a.id].box - p.cards[b.id].box);
+  for (const i of practice) { if (seq.length >= cfg.n) break; seq.push({kind:'quiz', id:i.id, mode:'practice'}); }
+  return seq.slice(0, cfg.n);
+}
+
+function quizType(item, card) {
+  const b = card ? card.box : 0, r = Math.random();
+  if (item.type === 'k') return r < 0.55 ? 'k2r' : 's2k';
+  if (b <= 1) return r < 0.5 ? 'listen' : 'recall';
+  if (b <= 3) return r < 0.34 ? 'listen' : r < 0.67 ? 'recall' : 'speak';
+  return r < 0.65 ? 'speak' : 'recall';
+}
+function makeOptions(item, field) {
+  const pool = shuffle(ITEMS.filter(i => i.type === item.type && i.id !== item.id && MIS[i.m].ready));
+  const prof = PROF(), chosen = [fill(item, prof)], vals = new Set([fill(item, prof)[field]]);
+  for (const i of pool) { const f = fill(i, prof); if (!vals.has(f[field])) { chosen.push(f); vals.add(f[field]); } if (chosen.length === 4) break; }
+  return shuffle(chosen);
+}
+function grade(p, id, correct, mode) {
+  const t = today();
+  const c = p.cards[id] || (p.cards[id] = {box:0, due:t, right:0, wrong:0});
+  if (correct) {
+    c.t = Date.now();
+    c.right++;
+    if (mode === 'retry') { c.due = addDays(t, 1); }
+    else { if (mode !== 'practice' || c.due <= t) c.box = Math.min(c.box + 1, INTERVALS.length - 1); c.due = addDays(t, INTERVALS[c.box]); }
+  } else {
+    c.t = Date.now(); c.wrong++; c.box = Math.max(0, c.box - 2); c.due = t;
+  }
+}
+function checkStamps(p) {
+  const won = [];
+  MISSIONS.forEach((m, idx) => {
+    if (!m.ready || p.stamps.includes(m.id) || !isUnlocked(p, idx)) return;
+    const st = missionStats(p, m.id);
+    if (st.n && st.known === st.n) { p.stamps.push(m.id); won.push(m); }
+  });
+  return won;
+}
+
+/* ---------- Icons ---------- */
+const IC = {
+  speaker:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>'
+};
+
+/* ---------- Bausteine ---------- */
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 10) return {jp:'おはよう', de:'Guten Morgen'};
+  if (h < 18) return {jp:'こんにちは', de:'Hallo'};
+  return {jp:'こんばんは', de:'Guten Abend'};
+}
+function countdownHTML() {
+  const d = daysToTrip();
+  if (d > 0) return `<div class="countdown"><span class="jp" lang="ja">とうきょうまで ${d}にち</span><span class="muted small">noch ${d} Tage bis Tokio</span></div>`;
+  if (d >= -17) return `<div class="countdown"><span class="jp" lang="ja">にほんへ ようこそ！</span><span class="muted small">Willkommen in Japan!</span></div>`;
+  return `<div class="countdown"><span class="jp" lang="ja">おかえりなさい</span><span class="muted small">Willkommen zurück</span></div>`;
+}
+function weekBar(p) {
+  const x = weekXP(p), g = p.settings.goal, pct = Math.min(100, Math.round(x / g * 100));
+  return `<div class="bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${pct}%"></span></div>`;
+}
+function stampHTML(m, cls) { return `<div class="stamp ${cls || ''}" lang="ja" aria-label="Stempel ${esc(m.title)}">${esc(m.stamp || m.jp).replace(/\n/g, '<br>')}</div>`; }
+function signHTML(item, opts) {
+  opts = opts || {};
+  const p = P(), it = fill(item, PROF()), m = MIS[item.m];
+  const showRo = opts.ro !== undefined ? opts.ro : p.settings.romaji;
+  const isK = item.type === 'k';
+  const de = isK ? `Silbe „${it.ro}“` : it.de;
+  return `<div class="sign">
+    <div class="sign-top">
+      ${it.em ? `<div class="sign-em" aria-hidden="true">${it.em}</div>` : ''}
+      <div class="sign-jp${isK ? ' kana' : ''}" lang="ja">${esc(it.jp)}</div>
+      ${showRo ? `<div class="sign-ro">${esc(it.ro)}</div>` : ''}
+    </div>
+    <div class="sign-band"><span>${esc(de)}</span><span class="sign-stn">${isK ? 'Hiragana' : 'Mission ' + m.no}<br>${esc(m.title)}</span></div>
+  </div>`;
+}
+function audioRow(text) {
+  return `<div class="audio-row">
+    <button class="btn ghost small" data-act="say" data-t="${esc(text)}">${IC.speaker} Anhören</button>
+    <button class="btn ghost small" data-act="say" data-t="${esc(text)}" data-slow="1">Langsam</button>
+  </div>`;
+}
+
+/* ---------- Screens ---------- */
+function renderPick() {
+  return `
+  <header class="top"><div><h1 lang="ja">だれが べんきょうする？</h1><p class="muted">Wer lernt heute?</p></div></header>
+  ${countdownHTML()}
+  <div class="who">
+    ${PROFILES.map(pr => { const p = S.profiles[pr.id]; return `
+      <button class="who-tile" data-act="choose" data-v="${pr.id}">
+        <span class="avatar" aria-hidden="true">${pr.avatar}</span>
+        <b>${esc(pr.name)}</b>
+        ${weekBar(p)}
+        <span class="small muted">${weekXP(p)} / ${p.settings.goal} XP diese Woche</span>
+      </button>`; }).join('')}
+  </div>
+  ${storageNote()}`;
+}
+
+function renderHome() {
+  const p = P(), pr = PROF(), g = greeting();
+  const x = weekXP(p), goal = p.settings.goal, left = daysLeftInWeek();
+  const t = today();
+  const due = ITEMS.filter(i => p.cards[i.id] && p.cards[i.id].due <= t).length;
+  const fresh = orderedFresh(p).length;
+  let lastOpen = 0; MISSIONS.forEach((m, i) => { if (isUnlocked(p, i)) lastOpen = i; });
+  const fillPct = (lastOpen / MISSIONS.length) * 100;
+
+  return `
+  <header class="top">
+    <div class="top-left">
+      <button class="avatar" data-act="switch" aria-label="Profil wechseln">${pr.avatar}</button>
+      <div style="min-width:0"><h1><span lang="ja">${g.jp}</span>, ${esc(pr.name)}</h1><p class="muted small">${g.de}, ${esc(pr.name)}</p></div>
+    </div>
+    <button class="iconbtn" data-act="go" data-v="settings" aria-label="Einstellungen">${IC.gear}</button>
+  </header>
+  ${countdownHTML()}
+
+  <section class="panel">
+    <div class="bar-label"><b style="color:var(--ink)">Wochenziel</b><span>${x} / ${goal} XP</span></div>
+    ${weekBar(p)}
+    <p class="small muted">${x >= goal ? 'Wochenziel geschafft. Alles ab jetzt ist Bonus.' : `Noch ${goal - x} XP${left ? `, ${left} ${left === 1 ? 'Tag' : 'Tage'} Zeit` : ', heute ist der letzte Tag der Woche'}.`}</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Session starten</h2>
+    <div class="lens">
+      ${['kurz','normal','sprint'].map(k => `<button class="len${k === 'normal' ? ' main' : ''}" data-act="start" data-v="${k}"><b>${LEN[k].label}</b><span>${LEN[k].min}</span></button>`).join('')}
+    </div>
+    <p class="small muted">${due ? `${due} ${due === 1 ? 'Karte wartet' : 'Karten warten'} auf Wiederholung. ` : 'Nichts fällig. '}${fresh ? `${fresh} neue Inhalte freigeschaltet.` : 'Alle freigeschalteten Inhalte sind gestartet.'}</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Deine Strecke nach Japan</h2>
+    <ol class="route">
+      <li class="fill" aria-hidden="true" style="height:calc((100% - 44px) * ${fillPct / 100})"></li>
+      ${MISSIONS.map((m, i) => {
+        const open = isUnlocked(p, i), st = missionStats(p, m.id), stamped = p.stamps.includes(m.id);
+        const cls = ['st', open ? 'open' : 'locked', i === lastOpen ? 'cur' : ''].join(' ');
+        const meta = !m.ready ? m.week : open ? `${st.known}/${st.n} sicher` : 'gesperrt';
+        return `<li class="${cls}">
+          <span class="st-dot" aria-hidden="true"></span>
+          <button class="st-body" ${open ? `data-act="mission" data-v="${m.id}"` : 'disabled'}>
+            <b>${m.no}. ${esc(m.title)}</b><span class="jp" lang="ja">${esc(m.jp)}</span>
+          </button>
+          ${stamped ? stampHTML(m) : `<span class="st-meta">${esc(meta)}</span>`}
+        </li>`; }).join('')}
+      <li class="st st-goal"><span class="st-dot" aria-hidden="true"></span><div class="st-body"><b>Tokio, 4. Februar</b><span class="jp" lang="ja">とうきょう</span></div><span class="st-meta"></span></li>
+    </ol>
+    <p class="small muted">Die nächste Mission öffnet sich, wenn 60 % der aktuellen einmal richtig beantwortet sind. Einen Stempel gibt es, wenn alles einer Mission sicher sitzt.</p>
+  </section>
+  ${storageNote()}`;
+}
+
+function storageNote() {
+  const warn = !storageOK ? `<p class="banner">Dieser Browser kann nichts speichern (privates Fenster?). Mit Familien-Login bleibt der Fortschritt trotzdem in der Familien-Datenbank.</p>` : '';
+  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.2</p>`;
+}
+function renderLogin() {
+  return `
+  <header style="display:flex;flex-direction:column;gap:6px;padding-top:16px">
+    <h1 lang="ja" style="font-size:34px">ようこそ！</h1>
+    <p class="muted">Willkommen beim Japan-Trainer. Meldet dieses Gerät einmal mit dem Familien-Login an, dann lernt jeder auf jedem Gerät weiter, wo er aufgehört hat.</p>
+  </header>
+  ${countdownHTML()}
+  <form class="panel" id="login-form" autocomplete="on">
+    <div class="field"><label for="login-email">E-Mail</label><input id="login-email" type="email" autocomplete="username" required></div>
+    <div class="field"><label for="login-pw">Passwort</label><input id="login-pw" type="password" autocomplete="current-password" required></div>
+    ${cur.loginErr ? `<p class="err">${esc(cur.loginErr)}</p>` : ''}
+    <button class="btn" type="submit" ${cur.loggingIn ? 'disabled' : ''}>${cur.loggingIn ? 'Melde an …' : 'Anmelden'}</button>
+  </form>
+  <button class="linkbtn" data-act="local-only">Ohne Login weiter (nur auf diesem Gerät)</button>`;
+}
+
+/* ----- Session ----- */
+function startSession(len) {
+  const p = P();
+  const steps = buildSession(p, len);
+  if (!steps.length) { cur.screen = 'home'; render(); return; }
+  cur.sess = {len, steps, i:0, right:0, wrong:0, xp:0, newIds:[], answered:false, picked:null, revealed:false};
+  p.sess[DEV] = (p.sess[DEV] || 0) + 1; save();
+  cur.screen = 'session';
+  prepStep();
+  render();
+  autoAudio();
+}
+function step() { return cur.sess.steps[cur.sess.i]; }
+function prepStep() {
+  const s = step(); if (!s) return;
+  cur.sess.answered = false; cur.sess.picked = null; cur.sess.revealed = false;
+  if (s.kind === 'quiz' && !s.type) {
+    const item = ITEM[s.id];
+    s.type = quizType(item, P().cards[s.id]);
+    if (s.type === 'listen') s.opts = makeOptions(item, 'de');
+    if (s.type === 'recall') s.opts = makeOptions(item, 'jp');
+    if (s.type === 'k2r') s.opts = makeOptions(item, 'ro');
+    if (s.type === 's2k') s.opts = makeOptions(item, 'jp');
+  }
+}
+function autoAudio() {
+  const s = step(); if (!s) return;
+  const it = fill(ITEM[s.id], PROF());
+  if (s.kind === 'intro' || s.type === 'listen' || s.type === 's2k') speak(it.jp);
+}
+function renderSession() {
+  const se = cur.sess, s = step(), p = P();
+  const pct = Math.round(se.i / se.steps.length * 100);
+  const item = ITEM[s.id], it = fill(item, PROF());
+  let body = '';
+  if (s.kind === 'intro') {
+    body = `<span class="chip" style="align-self:center">Neu</span>
+      ${signHTML(item, {ro:true})}
+      ${audioRow(it.jp)}
+      ${item.type === 'k' ? `<p class="note">${esc(item.tip)}</p>` : `<p class="note">${esc(it.note)}</p>`}
+      <button class="btn" data-act="next">Weiter</button>`;
+  } else {
+    const t = s.type, ans = se.answered;
+    let prompt = '', optsHTML = '';
+    if (t === 'listen') {
+      prompt = `<p class="prompt">Was bedeutet das?</p><button class="play" data-act="say" data-t="${esc(it.jp)}" aria-label="Nochmal anhören">${IC.speaker}</button>`;
+      optsHTML = optList(s, o => `<span class="em" aria-hidden="true">${o.em || ''}</span><span>${esc(o.de)}</span>`);
+    } else if (t === 'recall') {
+      prompt = `<div class="prompt-de"><span class="em" aria-hidden="true">${it.em || ''}</span><span class="de">${esc(it.de)}</span><span class="muted small">Wie sagt man das auf Japanisch?</span></div>`;
+      optsHTML = optList(s, o => `<span class="ojp" lang="ja">${esc(o.jp)}</span>${p.settings.romaji || ans ? `<span class="oro">${esc(o.ro)}</span>` : ''}`);
+    } else if (t === 'k2r') {
+      prompt = `<p class="prompt">Wie liest man dieses Zeichen?</p><div class="sign"><div class="sign-top"><div class="sign-jp kana" lang="ja">${esc(it.jp)}</div></div></div>`;
+      optsHTML = optList(s, o => `<span style="font-size:24px;font-weight:700">${esc(o.ro)}</span>`);
+    } else if (t === 's2k') {
+      prompt = `<p class="prompt">Welches Zeichen hörst du?</p><button class="play" data-act="say" data-t="${esc(it.jp)}" aria-label="Nochmal anhören">${IC.speaker}</button>`;
+      optsHTML = optList(s, o => `<span class="ojp kana" lang="ja">${esc(o.jp)}</span>${ans ? `<span class="oro">${esc(o.ro)}</span>` : ''}`);
+    } else if (t === 'speak') {
+      prompt = `<div class="prompt-de"><span class="em" aria-hidden="true">${it.em || ''}</span><span class="de">${esc(it.de)}</span><span class="muted small">Sag es laut auf Japanisch. Dann aufdecken.</span></div>`;
+    }
+    let after = '';
+    if (t === 'speak') {
+      if (!se.revealed) after = `<button class="btn" data-act="reveal">Aufdecken</button>`;
+      else after = `${signHTML(item, {ro:true})}${audioRow(it.jp)}
+        <p class="prompt" style="font-size:17px">Hast du es gewusst?</p>
+        <div class="row"><button class="btn ghost" data-act="self" data-v="0">Noch nicht</button><button class="btn" data-act="self" data-v="1">Gewusst</button></div>`;
+    } else if (ans) {
+      const ok = fill(ITEM[s.id], PROF())[fieldOf(t)] === se.pickedVal;
+      after = `<p class="feedback ${ok ? 'ok' : 'no'}">${ok ? 'Richtig!' : 'Fast. So heißt es:'}</p>
+        ${t === 'k2r' || t === 's2k' ? `<p class="note" style="text-align:center">${esc(item.tip)}</p>` : `${signHTML(item, {ro:true})}<p class="note">${esc(it.note)}</p>`}
+        <button class="btn" data-act="next">Weiter</button>`;
+    }
+    body = `${prompt}${optsHTML ? `<div class="opts">${optsHTML}</div>` : ''}${after}`;
+  }
+  return `
+  <div class="sess-top">
+    <button class="iconbtn" data-act="quit" aria-label="Session beenden">${IC.close}</button>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <span class="small muted" style="font-variant-numeric:tabular-nums">${se.i + 1}/${se.steps.length}</span>
+  </div>
+  ${body}`;
+}
+function fieldOf(t) { return t === 'listen' ? 'de' : t === 'k2r' ? 'ro' : 'jp'; }
+function optList(s, inner) {
+  const se = cur.sess, f = fieldOf(s.type), right = fill(ITEM[s.id], PROF())[f];
+  return s.opts.map((o, idx) => {
+    let cls = 'opt';
+    if (se.answered) { if (o[f] === right) cls += ' right'; else if (idx === se.pickedIdx) cls += ' wrong'; }
+    return `<button class="${cls}" data-act="pick" data-v="${idx}" ${se.answered ? 'disabled' : ''}>${inner(o)}</button>`;
+  }).join('');
+}
+function answer(correct) {
+  const se = cur.sess, s = step(), p = P();
+  grade(p, s.id, correct, s.mode);
+  const gain = correct ? XP.right : XP.wrong;
+  se.xp += gain; addXP(p, gain);
+  if (correct) se.right++; else {
+    se.wrong++;
+    if (s.mode !== 'retry') { const at = Math.min(se.i + 3, se.steps.length); se.steps.splice(at, 0, {kind:'quiz', id:s.id, mode:'retry'}); }
+  }
+  save();
+}
+function next() {
+  const se = cur.sess;
+  if (step() && step().kind === 'intro') { se.xp += XP.intro; addXP(P(), XP.intro); save(); }
+  se.i++;
+  if (se.i >= se.steps.length) return finish();
+  prepStep(); render(); window.scrollTo(0, 0); autoAudio();
+}
+function finish() {
+  const p = P();
+  cur.sess.won = checkStamps(p);
+  save();
+  cur.screen = 'done'; render(); window.scrollTo(0, 0);
+}
+function renderDone() {
+  const se = cur.sess, p = P();
+  const total = se.right + se.wrong;
+  return `
+  <div style="text-align:center;display:flex;flex-direction:column;gap:8px;padding-top:12px">
+    <h1 lang="ja" style="font-size:34px">おつかれさま！</h1>
+    <p class="muted">„Gute Arbeit!“ So bedankt man sich in Japan nach getaner Arbeit.</p>
+  </div>
+  ${se.won && se.won.length ? `<section class="panel" style="align-items:center;text-align:center">
+     ${se.won.map(m => stampHTML(m, 'big pop')).join('')}
+     <b>Neuer Stempel: Mission ${se.won.map(m => m.no + ' ' + esc(m.title)).join(', ')}</b>
+     <p class="small muted">Alles aus dieser Mission sitzt jetzt sicher.</p></section>` : ''}
+  <section class="panel">
+    <div class="bar-label"><b style="color:var(--ink)">+${se.xp} XP</b><span>${total ? `${se.right} von ${total} richtig` : 'Neue Inhalte angesehen'}</span></div>
+    <div class="bar-label"><span>Wochenziel</span><span>${weekXP(p)} / ${p.settings.goal} XP</span></div>
+    ${weekBar(p)}
+  </section>
+  <div class="row">
+    <button class="btn ghost" data-act="go" data-v="home">Fertig</button>
+    <button class="btn" data-act="start" data-v="${se.len}">Noch eine Runde</button>
+  </div>`;
+}
+
+/* ----- Spickzettel ----- */
+function renderSheet() {
+  const p = P();
+  const open = MISSIONS.filter((m, i) => isUnlocked(p, i));
+  return `
+  <header class="top"><div><h1>Spickzettel</h1><p class="muted small">Antippen zum Anhören. Funktioniert später auch in Japan.</p></div></header>
+  <input class="search" id="sheet-q" type="search" placeholder="Suchen: Danke, Toilette, sumimasen …" value="${esc(cur.sheetQ)}" autocomplete="off">
+  <div class="chips">
+    <button class="fchip ${cur.sheetFilter === 'all' ? 'on' : ''}" data-act="sf" data-v="all">Alle Sätze</button>
+    ${open.map(m => `<button class="fchip ${cur.sheetFilter === m.id ? 'on' : ''}" data-act="sf" data-v="${m.id}">${m.no}. ${esc(m.title)}</button>`).join('')}
+    <button class="fchip ${cur.sheetFilter === 'kana' ? 'on' : ''}" data-act="sf" data-v="kana">Hiragana</button>
+  </div>
+  <div id="sheet-list">${sheetList()}</div>`;
+}
+function sheetList() {
+  const p = P(), prof = PROF();
+  const openIds = MISSIONS.filter((m, i) => isUnlocked(p, i)).map(m => m.id);
+  if (cur.sheetFilter === 'kana') {
+    const ks = ITEMS.filter(i => i.type === 'k' && openIds.includes(i.m));
+    return `<div class="kana-grid">${ks.map(k => `<button class="kana-cell" data-act="say" data-t="${k.jp}"><span class="jp" lang="ja">${k.jp}</span><span>${k.ro}</span></button>`).join('')}</div>`;
+  }
+  const q = cur.sheetQ.trim().toLowerCase();
+  const list = ITEMS.filter(i => i.type === 'p' && openIds.includes(i.m) && (cur.sheetFilter === 'all' || i.m === cur.sheetFilter))
+    .map(i => fill(i, prof))
+    .filter(i => !q || (i.de + ' ' + i.ro + ' ' + i.jp).toLowerCase().includes(q));
+  if (!list.length) return `<p class="muted">Nichts gefunden. Probier ein anderes Wort.</p>`;
+  return `<div class="list">${list.map(i => `
+    <button class="li" data-act="say" data-t="${esc(i.jp)}">
+      <span class="em" aria-hidden="true">${i.em || ''}</span>
+      <span style="min-width:0"><span class="ljp" lang="ja">${esc(i.jp)}</span><span class="lro">${esc(i.ro)}</span><span class="lde">${esc(i.de)}</span></span>
+      ${IC.speaker}
+    </button>`).join('')}</div>`;
+}
+
+/* ----- Familie ----- */
+function renderFamily() {
+  const famXP = PROFILES.reduce((a, pr) => a + weekXP(S.profiles[pr.id]), 0);
+  const famGoal = PROFILES.reduce((a, pr) => a + S.profiles[pr.id].settings.goal, 0);
+  const totalP = ITEMS.length;
+  return `
+  <header class="top"><div><h1>Familie</h1><p class="muted small">Gemeinsam bis Tokio</p></div></header>
+  ${countdownHTML()}
+  <section class="panel">
+    <b>Familien-Quest</b>
+    <p class="small">Am Ende der Reise hat jeder von euch mindestens ein Essen komplett auf Japanisch bestellt.</p>
+    <div class="bar-label"><span>Familien-XP diese Woche</span><span>${famXP} / ${famGoal}</span></div>
+    <div class="bar"><span style="width:${Math.min(100, Math.round(famXP / famGoal * 100))}%"></span></div>
+  </section>
+  <div class="list">
+    ${PROFILES.map(pr => { const p = S.profiles[pr.id], k = knownCount(p); return `
+      <div class="fam">
+        <span class="avatar" aria-hidden="true">${pr.avatar}</span>
+        <div style="min-width:0;display:flex;flex-direction:column;gap:6px">
+          <div class="bar-label"><b style="color:var(--ink)">${esc(pr.name)}</b><span>${weekXP(p)} / ${p.settings.goal} XP</span></div>
+          ${weekBar(p)}
+          <div class="fam-stats"><span>${k} von ${totalP} sicher</span><span>${sessionCount(p)} Sessions</span><span>${totalXP(p)} XP gesamt</span></div>
+          ${p.stamps.length ? `<div class="stamps-row">${p.stamps.map(id => stampHTML(MIS[id])).join('')}</div>` : ''}
+        </div>
+      </div>`; }).join('')}
+  </div>
+  <p class="foot sync-text">${esc(Sync.text())}</p>`;
+}
+
+/* ----- Einstellungen ----- */
+function renderSettings() {
+  const p = P(), pr = PROF(), st = p.settings;
+  const vName = jaVoice ? jaVoice.name : null;
+  return `
+  <header class="top">
+    <div class="top-left"><button class="iconbtn" data-act="go" data-v="home" aria-label="Zurück">${IC.back}</button><div><h1>Einstellungen</h1><p class="muted small">für ${esc(pr.name)}</p></div></div>
+  </header>
+  <div class="list">
+    <div class="set"><div><b>Lautschrift (Romaji) anzeigen</b><p class="small muted">Aus = mehr Training fürs Lesen</p></div>
+      <button class="toggle ${st.romaji ? 'on' : ''}" data-act="romaji" role="switch" aria-checked="${st.romaji}" aria-label="Romaji anzeigen"></button></div>
+    <div class="set"><div><b>Wochenziel</b><p class="small muted">Eine Normal-Session bringt etwa 200 XP</p></div>
+      <div class="seg">${[200, 400, 600].map(g => `<button class="${st.goal === g ? 'on' : ''}" data-act="goal" data-v="${g}">${g}</button>`).join('')}</div></div>
+    <div class="set"><div><b>Sprechtempo</b><p class="small muted">Für „Langsam“ gibt es immer den Extra-Knopf</p></div>
+      <div class="seg">${[[0.75, 'Ruhig'], [0.9, 'Normal'], [1.0, 'Echt']].map(([r, l]) => `<button class="${st.rate === r ? 'on' : ''}" data-act="rate" data-v="${r}">${l}</button>`).join('')}</div></div>
+    <div class="set"><div><b>Japanische Stimme</b><p class="small muted">${vName ? esc(vName) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
+      <button class="btn ghost small" data-act="say" data-t="こんにちは。よろしく おねがいします。">${IC.speaker} Test</button></div>
+  </div>
+  ${!vName && hasTTS ? `<p class="banner">Auf iPhone und iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen › Japanisch › „Kyoko (Erweitert)“ laden. Auf dem Mac: Systemeinstellungen › Bedienungshilfen › Gesprochene Inhalte › Systemstimme.</p>` : ''}
+  <div class="list">
+    <div class="set"><div><b>Familien-Sync</b><p class="small muted sync-text">${esc(Sync.text())}</p></div>
+      ${Sync.user ? `<div class="row" style="flex:none"><button class="btn ghost small" data-act="sync-now">Jetzt abgleichen</button><button class="btn ghost small" data-act="logout">Abmelden</button></div>`
+        : Sync.sb ? `<button class="btn small" data-act="login">Anmelden</button>` : ''}</div>
+    <div class="set"><div><b>Profil wechseln</b></div><button class="btn ghost small" data-act="switch">Wer lernt?</button></div>
+    <div class="set"><div><b>Fortschritt von ${esc(pr.name)} zurücksetzen</b><p class="small muted">Löscht den Lernstand dieses Profils, auch auf den anderen Geräten.</p></div>
+      ${cur.confirmReset ? `<div class="row" style="flex:none"><button class="btn ghost small" data-act="reset-no">Abbrechen</button><button class="btn small" style="background:var(--bad)" data-act="reset-yes">Löschen</button></div>`
+        : `<button class="btn ghost small" data-act="reset">Zurücksetzen</button>`}</div>
+  </div>
+  ${storageNote()}`;
+}
+
+/* ---------- Render & Events ---------- */
+function render() {
+  const sc = cur.screen;
+  let html = '';
+  const needLogin = Sync.state === 'login' && !S.localOnly && sc !== 'session' && sc !== 'done';
+  if (needLogin) { html = renderLogin(); }
+  else if (sc === 'pick' || !P()) { cur.screen = 'pick'; html = renderPick(); }
+  else if (sc === 'home') html = renderHome();
+  else if (sc === 'session') html = renderSession();
+  else if (sc === 'done') html = renderDone();
+  else if (sc === 'sheet') html = renderSheet();
+  else if (sc === 'family') html = renderFamily();
+  else if (sc === 'settings') html = renderSettings();
+  app.innerHTML = html;
+  const showTabs = !needLogin && ['home', 'sheet', 'family'].includes(cur.screen);
+  tabs.hidden = !showTabs;
+  document.body.classList.toggle('in-session', !showTabs);
+  tabs.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.v === cur.screen));
+  if (cur.screen === 'sheet') {
+    const q = document.getElementById('sheet-q');
+    q.addEventListener('input', () => { cur.sheetQ = q.value; document.getElementById('sheet-list').innerHTML = sheetList(); });
+  }
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act, v = b.dataset.v, p = P();
+  switch (act) {
+    case 'choose': cur.pid = v; S.last = v; saveLocal(); cur.screen = 'home'; render(); break;
+    case 'switch': cur.screen = 'pick'; render(); break;
+    case 'tab': case 'go': cur.screen = v; cur.confirmReset = false; render(); window.scrollTo(0, 0); break;
+    case 'start': startSession(v); window.scrollTo(0, 0); break;
+    case 'say': speak(b.dataset.t, b.dataset.slow === '1'); break;
+    case 'next': next(); break;
+    case 'quit': finish(); break;
+    case 'pick': {
+      const se = cur.sess, s = step(); if (se.answered) break;
+      const idx = +v, f = fieldOf(s.type), o = s.opts[idx];
+      const ok = o[f] === fill(ITEM[s.id], PROF())[f];
+      se.answered = true; se.pickedIdx = idx; se.pickedVal = o[f];
+      answer(ok);
+      render();
+      speak(fill(ITEM[s.id], PROF()).jp);
+      break;
+    }
+    case 'reveal': cur.sess.revealed = true; render(); speak(fill(ITEM[step().id], PROF()).jp); break;
+    case 'self': answer(v === '1'); next(); break;
+    case 'mission': cur.sheetFilter = v; cur.sheetQ = ''; cur.screen = 'sheet'; render(); window.scrollTo(0, 0); break;
+    case 'sf': cur.sheetFilter = v; render(); break;
+    case 'romaji': p.settings.romaji = !p.settings.romaji; p.settings.t = Date.now(); save(); render(); break;
+    case 'goal': p.settings.goal = +v; p.settings.t = Date.now(); save(); render(); break;
+    case 'rate': p.settings.rate = +v; p.settings.t = Date.now(); save(); render(); speak('こんにちは'); break;
+    case 'local-only': S.localOnly = true; saveLocal(); render(); break;
+    case 'login': S.localOnly = false; saveLocal(); render(); break;
+    case 'logout': Sync.logout().then(() => { S.localOnly = false; saveLocal(); render(); }); break;
+    case 'sync-now': Sync.pullAll(); break;
+    case 'reset': cur.confirmReset = true; render(); break;
+    case 'reset-no': cur.confirmReset = false; render(); break;
+    case 'reset-yes': S.profiles[cur.pid] = Object.assign(blankProfile(), {epoch: Date.now()}); cur.confirmReset = false; save(); cur.screen = 'home'; render(); break;
+  }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'login-form') return;
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim(), pw = document.getElementById('login-pw').value;
+  cur.loggingIn = true; cur.loginErr = ''; render();
+  Sync.login(email, pw).then(() => { cur.loggingIn = false; render(); })
+    .catch(err => {
+      cur.loggingIn = false;
+      cur.loginErr = /invalid/i.test(err && err.message || '') ? 'E-Mail oder Passwort stimmt nicht.' : 'Anmelden gerade nicht möglich. Besteht eine Internetverbindung?';
+      render();
+      const em = document.getElementById('login-email'); if (em) em.value = email;
+    });
+});
+document.addEventListener('keydown', e => {
+  if (cur.screen !== 'session') return;
+  if (e.key === 'Enter') { const b = app.querySelector('[data-act="next"],[data-act="reveal"]'); if (b) { e.preventDefault(); b.click(); } }
+  if (/^[1-4]$/.test(e.key)) { const b = app.querySelectorAll('[data-act="pick"]')[+e.key - 1]; if (b && !b.disabled) b.click(); }
+});
+
+render();
+Sync.init();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+})();
+</script>
+</body>
+</html>
