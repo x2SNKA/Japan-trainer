@@ -516,14 +516,33 @@ const Sync = {
 const hasTTS = 'speechSynthesis' in window;
 let jaVoice = null;
 function jaVoices() { return hasTTS ? speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)) : []; }
+// Qualität aus der technischen Kennung lesen: iOS nennt Kompakt- und Erweitert-Stimme beide nur "Kyoko"
+function voiceQuality(v) {
+  const id = (v.voiceURI || '') + ' ' + v.name;
+  if (/premium/i.test(id)) return 3;
+  if (/enhanced|erweitert/i.test(id)) return 2;
+  if (/compact|kompakt/i.test(id)) return 0;
+  return 1;
+}
+function voiceLabel(v, i, list) {
+  const q = voiceQuality(v);
+  const tag = q === 3 ? 'Premium' : q === 2 ? 'Erweitert' : q === 0 ? 'Kompakt' : '';
+  const twins = list.filter(x => x.name === v.name).length > 1;
+  return v.name + (tag ? ` (${tag})` : twins ? ` (Variante ${list.filter(x => x.name === v.name).indexOf(v) + 1})` : '');
+}
 function pickVoice() {
   if (!hasTTS) return null;
   const vs = jaVoices();
-  const chosen = S.voiceName && vs.find(v => v.name === S.voiceName);   // auf diesem Gerät gewählt
-  if (chosen) return chosen;
-  const pref = [/kyoko.*(premium|enhanced|erweitert)/i, /(premium|enhanced|erweitert)/i, /kyoko/i, /o-ren|otoya|hattori/i];
-  for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
-  return vs[0] || null;
+  if (S.voiceKey) {                                                     // auf diesem Gerät gewählt
+    const [uri, idx] = S.voiceKey.split('|');
+    const same = vs.filter(v => (v.voiceURI || v.name) === uri);
+    if (same.length) return same[Math.min(+idx || 0, same.length - 1)];
+  }
+  return vs.slice().sort((a, b) => (voiceQuality(b) - voiceQuality(a)) || (/kyoko/i.test(b.name) - /kyoko/i.test(a.name)))[0] || null;
+}
+function voiceKey(v, list) {
+  const uri = v.voiceURI || v.name;
+  return uri + '|' + list.filter(x => (x.voiceURI || x.name) === uri).indexOf(v);
 }
 if (hasTTS) {
   jaVoice = pickVoice();
@@ -784,7 +803,7 @@ function renderHome() {
 
 function storageNote() {
   const warn = !storageOK ? `<p class="banner">Dieser Browser kann nichts speichern (privates Fenster?). Mit Familien-Login bleibt der Fortschritt trotzdem in der Familien-Datenbank.</p>` : '';
-  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.3</p>`;
+  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.4</p>`;
 }
 function renderLogin() {
   return `
@@ -1017,16 +1036,16 @@ function renderSettings() {
       <div class="seg">${[200, 400, 600].map(g => `<button class="${st.goal === g ? 'on' : ''}" data-act="goal" data-v="${g}">${g}</button>`).join('')}</div></div>
     <div class="set"><div><b>Sprechtempo</b><p class="small muted">Für „Langsam“ gibt es immer den Extra-Knopf</p></div>
       <div class="seg">${[[0.75, 'Ruhig'], [0.9, 'Normal'], [1.0, 'Echt']].map(([r, l]) => `<button class="${st.rate === r ? 'on' : ''}" data-act="rate" data-v="${r}">${l}</button>`).join('')}</div></div>
-    <div class="set"><div><b>Japanische Stimme auf diesem Gerät</b><p class="small muted">${vName ? esc(vName) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
+    <div class="set"><div><b>Japanische Stimme auf diesem Gerät</b><p class="small muted">${jaVoice ? esc(voiceLabel(jaVoice, 0, jaVoices())) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
       <button class="btn ghost small" data-act="say" data-t="こんにちは。よろしく おねがいします。">${IC.speaker} Test</button></div>
   </div>
   ${jaVoices().length > 1 ? `<section style="display:flex;flex-direction:column;gap:10px">
     <h2>Stimme wählen</h2>
-    <p class="small muted">Antippen spielt eine Probe und wählt die Stimme. „Erweitert“ oder „Premium“ klingt meist am natürlichsten.</p>
-    <div class="list">${jaVoices().map(v => `
-      <button class="li" data-act="voice" data-v="${esc(v.name)}" style="grid-template-columns:1fr auto">
-        <span style="min-width:0"><span class="lde"><b>${esc(v.name)}</b></span><span class="lro">${v.localService ? 'auf dem Gerät' : 'online'}</span></span>
-        ${jaVoice && jaVoice.name === v.name ? '<span class="chip">Aktiv</span>' : IC.speaker}
+    <p class="small muted">Antippen spielt eine Probe und wählt die Stimme. „Erweitert“ oder „Premium“ klingt meist am natürlichsten. Nicht jede installierte Stimme gibt das System an Web-Apps weiter.</p>
+    <div class="list">${jaVoices().map((v, i, list) => `
+      <button class="li" data-act="voice" data-v="${i}" style="grid-template-columns:1fr auto">
+        <span style="min-width:0"><span class="lde"><b>${esc(voiceLabel(v, i, list))}</b></span><span class="lro">${v.localService ? 'auf dem Gerät' : 'online'}</span></span>
+        ${jaVoice === v ? '<span class="chip">Aktiv</span>' : IC.speaker}
       </button>`).join('')}</div>
   </section>` : ''}
   ${!vName && hasTTS ? `<p class="banner">Auf iPhone und iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen › Japanisch › „Kyoko (Erweitert)“ laden. Auf dem Mac: Systemeinstellungen › Bedienungshilfen › Gesprochene Inhalte › Systemstimme.</p>` : ''}
@@ -1094,7 +1113,7 @@ document.addEventListener('click', e => {
     case 'romaji': p.settings.romaji = !p.settings.romaji; p.settings.t = Date.now(); save(); render(); break;
     case 'goal': p.settings.goal = +v; p.settings.t = Date.now(); save(); render(); break;
     case 'rate': p.settings.rate = +v; p.settings.t = Date.now(); save(); render(); speak('こんにちは'); break;
-    case 'voice': S.voiceName = v; saveLocal(); jaVoice = pickVoice(); render(); speak('すみません、ラーメンを ひとつ おねがいします。'); break;
+    case 'voice': { const list = jaVoices(), vo = list[+v]; if (vo) { S.voiceKey = voiceKey(vo, list); saveLocal(); jaVoice = vo; } render(); } speak('すみません、ラーメンを ひとつ おねがいします。'); break;
     case 'local-only': S.localOnly = true; saveLocal(); render(); break;
     case 'login': S.localOnly = false; saveLocal(); render(); break;
     case 'logout': Sync.logout().then(() => { S.localOnly = false; saveLocal(); render(); }); break;
