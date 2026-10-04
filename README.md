@@ -18,3 +18,9 @@ Für die beste Aussprache auf iPhone/iPad: Einstellungen › Bedienungshilfen �
 ## Daten
 Der Lernstand liegt pro Gerät lokal und wird über Supabase (Tabelle `progress`, Region Frankfurt) zwischen den Geräten abgeglichen.
 Lesen und schreiben kann nur der Familien-Login (Row-Level-Security). Der Publishable Key in `index.html` ist für den Browser gedacht und gibt ohne Login keinen Zugriff.
+
+## Aussprache-Aufnahmen
+iOS gibt heruntergeladene „Erweitert“-Stimmen nicht an Web-Apps weiter. Deshalb spielt die App vorab erzeugte Aufnahmen aus `audio/` ab und nutzt die Gerätestimme nur als Ersatz.
+1. Nach neuen Inhalten: `node tools/build-texts.js` aktualisiert `audio/texts.tsv`.
+2. Auf dem Mac im Terminal: `bash <(curl -fsSL https://x2snka.github.io/Japan-trainer/tools/make-audio.sh)` erzeugt fehlende Aufnahmen in `~/Japan-Audio/japan-audio.zip`.
+3. Die `.m4a`-Dateien nach `audio/` legen und `node tools/build-texts.js` erneut ausführen (aktualisiert `audio/index.json`).

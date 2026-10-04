@@ -548,8 +548,34 @@ if (hasTTS) {
   jaVoice = pickVoice();
   speechSynthesis.onvoiceschanged = () => { jaVoice = pickVoice(); if (cur.screen === 'settings') render(); };
 }
+/* Aufgenommene Aussprache (audio/<hash>.m4a), erzeugt mit tools/make-audio.sh; sonst Gerätestimme */
+const normJa = t => String(t).replace(/[\s　]+/g, '');
+function audioKey(t) {                       // FNV-1a 32 Bit, identisch zu tools/build-texts
+  let h = 0x811c9dc5; const s = normJa(t);
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return ('0000000' + h.toString(16)).slice(-8);
+}
+let AUDIO = new Set(), curAudio = null;
+fetch('audio/index.json', {cache:'no-cache'}).then(r => r.ok ? r.json() : []).then(a => { AUDIO = new Set(a); if (cur.screen === 'settings') render(); }).catch(() => {});
+function playRecorded(text, slow) {
+  const k = audioKey(text);
+  if (!AUDIO.has(k)) return false;
+  try {
+    if (hasTTS && (speechSynthesis.speaking || speechSynthesis.pending)) speechSynthesis.cancel();
+    if (curAudio) { curAudio.pause(); }
+    const a = new Audio('audio/' + k + '.m4a');
+    const r = (P() && P().settings.rate) || 0.9;
+    a.playbackRate = slow ? 0.7 : Math.min(1.2, Math.max(0.7, r / 0.9));
+    a.preservesPitch = true; a.webkitPreservesPitch = true;
+    curAudio = a;
+    const pr = a.play(); if (pr && pr.catch) pr.catch(() => {});
+    return true;
+  } catch (e) { return false; }
+}
 function speak(text, slow) {
-  if (!hasTTS || !text) return;
+  if (!text) return;
+  if (playRecorded(text, slow)) return;
+  if (!hasTTS) return;
   try {
     if (speechSynthesis.speaking || speechSynthesis.pending) speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text.replace(/[\s　]+/g, ''));
@@ -803,7 +829,7 @@ function renderHome() {
 
 function storageNote() {
   const warn = !storageOK ? `<p class="banner">Dieser Browser kann nichts speichern (privates Fenster?). Mit Familien-Login bleibt der Fortschritt trotzdem in der Familien-Datenbank.</p>` : '';
-  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.4</p>`;
+  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.5</p>`;
 }
 function renderLogin() {
   return `
@@ -1039,6 +1065,7 @@ function renderSettings() {
     <div class="set"><div><b>Japanische Stimme auf diesem Gerät</b><p class="small muted">${jaVoice ? esc(voiceLabel(jaVoice, 0, jaVoices())) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
       <button class="btn ghost small" data-act="say" data-t="こんにちは。よろしく おねがいします。">${IC.speaker} Test</button></div>
   </div>
+  ${AUDIO.size ? `<p class="banner">Aufgenommene Aussprache aktiv für ${ITEMS.filter(i => AUDIO.has(audioKey(fill(i, PROF()).jp))).length} von ${ITEMS.length} Inhalten. Die Gerätestimme springt nur ein, wo noch keine Aufnahme existiert.</p>` : ''}
   ${jaVoices().length > 1 ? `<section style="display:flex;flex-direction:column;gap:10px">
     <h2>Stimme wählen</h2>
     <p class="small muted">Antippen spielt eine Probe und wählt die Stimme. „Erweitert“ oder „Premium“ klingt meist am natürlichsten. Nicht jede installierte Stimme gibt das System an Web-Apps weiter.</p>

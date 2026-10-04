@@ -1,5 +1,5 @@
 /* Offline-Unterstützung: App-Dateien werden zwischengespeichert, Lernstände laufen nie über den Cache. */
-const CACHE = 'japan-trainer-v0.4';
+const CACHE = 'japan-trainer-v0.5';
 const SHELL = ['./', 'index.html', 'supabase.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
@@ -16,10 +16,11 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.hostname.endsWith('supabase.co')) return;          // Datenbank nie cachen
-  if (req.mode === 'navigate') {                              // App-Seite: online immer die neueste Version
+  if (req.mode === 'navigate' || url.pathname.endsWith('/audio/index.json')) {   // immer die neueste Version, offline aus dem Cache                              // App-Seite: online immer die neueste Version
+    const slot = req.mode === 'navigate' ? 'index.html' : req;
     e.respondWith(fetch(req).then(res => {
-      const copy = res.clone(); caches.open(CACHE).then(c => c.put('index.html', copy)); return res;
-    }).catch(() => caches.match('index.html')));
+      const copy = res.clone(); caches.open(CACHE).then(c => c.put(slot, copy)); return res;
+    }).catch(() => caches.match(slot)));
     return;
   }
   e.respondWith(caches.match(req).then(hit => {               // Rest: aus dem Cache, im Hintergrund aktualisieren
