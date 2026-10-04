@@ -515,9 +515,12 @@ const Sync = {
 /* ---------- Audio (eingebaute japanische Stimme) ---------- */
 const hasTTS = 'speechSynthesis' in window;
 let jaVoice = null;
+function jaVoices() { return hasTTS ? speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang)) : []; }
 function pickVoice() {
   if (!hasTTS) return null;
-  const vs = speechSynthesis.getVoices().filter(v => /^ja/i.test(v.lang));
+  const vs = jaVoices();
+  const chosen = S.voiceName && vs.find(v => v.name === S.voiceName);   // auf diesem Gerät gewählt
+  if (chosen) return chosen;
   const pref = [/kyoko.*(premium|enhanced|erweitert)/i, /(premium|enhanced|erweitert)/i, /kyoko/i, /o-ren|otoya|hattori/i];
   for (const r of pref) { const v = vs.find(x => r.test(x.name)); if (v) return v; }
   return vs[0] || null;
@@ -781,7 +784,7 @@ function renderHome() {
 
 function storageNote() {
   const warn = !storageOK ? `<p class="banner">Dieser Browser kann nichts speichern (privates Fenster?). Mit Familien-Login bleibt der Fortschritt trotzdem in der Familien-Datenbank.</p>` : '';
-  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.2</p>`;
+  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.3</p>`;
 }
 function renderLogin() {
   return `
@@ -1014,9 +1017,18 @@ function renderSettings() {
       <div class="seg">${[200, 400, 600].map(g => `<button class="${st.goal === g ? 'on' : ''}" data-act="goal" data-v="${g}">${g}</button>`).join('')}</div></div>
     <div class="set"><div><b>Sprechtempo</b><p class="small muted">Für „Langsam“ gibt es immer den Extra-Knopf</p></div>
       <div class="seg">${[[0.75, 'Ruhig'], [0.9, 'Normal'], [1.0, 'Echt']].map(([r, l]) => `<button class="${st.rate === r ? 'on' : ''}" data-act="rate" data-v="${r}">${l}</button>`).join('')}</div></div>
-    <div class="set"><div><b>Japanische Stimme</b><p class="small muted">${vName ? esc(vName) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
+    <div class="set"><div><b>Japanische Stimme auf diesem Gerät</b><p class="small muted">${vName ? esc(vName) : (hasTTS ? 'Keine japanische Stimme gefunden.' : 'Dieser Browser kann nicht vorlesen.')}</p></div>
       <button class="btn ghost small" data-act="say" data-t="こんにちは。よろしく おねがいします。">${IC.speaker} Test</button></div>
   </div>
+  ${jaVoices().length > 1 ? `<section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Stimme wählen</h2>
+    <p class="small muted">Antippen spielt eine Probe und wählt die Stimme. „Erweitert“ oder „Premium“ klingt meist am natürlichsten.</p>
+    <div class="list">${jaVoices().map(v => `
+      <button class="li" data-act="voice" data-v="${esc(v.name)}" style="grid-template-columns:1fr auto">
+        <span style="min-width:0"><span class="lde"><b>${esc(v.name)}</b></span><span class="lro">${v.localService ? 'auf dem Gerät' : 'online'}</span></span>
+        ${jaVoice && jaVoice.name === v.name ? '<span class="chip">Aktiv</span>' : IC.speaker}
+      </button>`).join('')}</div>
+  </section>` : ''}
   ${!vName && hasTTS ? `<p class="banner">Auf iPhone und iPad: Einstellungen › Bedienungshilfen › Gesprochene Inhalte › Stimmen › Japanisch › „Kyoko (Erweitert)“ laden. Auf dem Mac: Systemeinstellungen › Bedienungshilfen › Gesprochene Inhalte › Systemstimme.</p>` : ''}
   <div class="list">
     <div class="set"><div><b>Familien-Sync</b><p class="small muted sync-text">${esc(Sync.text())}</p></div>
@@ -1082,6 +1094,7 @@ document.addEventListener('click', e => {
     case 'romaji': p.settings.romaji = !p.settings.romaji; p.settings.t = Date.now(); save(); render(); break;
     case 'goal': p.settings.goal = +v; p.settings.t = Date.now(); save(); render(); break;
     case 'rate': p.settings.rate = +v; p.settings.t = Date.now(); save(); render(); speak('こんにちは'); break;
+    case 'voice': S.voiceName = v; saveLocal(); jaVoice = pickVoice(); render(); speak('すみません、ラーメンを ひとつ おねがいします。'); break;
     case 'local-only': S.localOnly = true; saveLocal(); render(); break;
     case 'login': S.localOnly = false; saveLocal(); render(); break;
     case 'logout': Sync.logout().then(() => { S.localOnly = false; saveLocal(); render(); }); break;
