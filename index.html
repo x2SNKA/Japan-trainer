@@ -252,10 +252,10 @@ const PROFILES = [
 const MISSIONS = [
   {id:'m1',  no:1,  week:'Woche 1',     title:'Hallo Japan',          jp:'こんにちは',     stamp:'こん\nにちは', ready:true},
   {id:'m2',  no:2,  week:'Woche 2',     title:'Ich bin …',            jp:'はじめまして',   stamp:'はじめ\nまして', ready:true},
-  {id:'m3',  no:3,  week:'Woche 3',     title:'Zahlen & Yen',         jp:'いくらですか'},
-  {id:'m4',  no:4,  week:'Woche 4',     title:'Konbini',              jp:'コンビニ'},
-  {id:'m5',  no:5,  week:'Woche 5',     title:'Restaurant I',         jp:'いらっしゃいませ'},
-  {id:'m6',  no:6,  week:'Woche 6',     title:'Restaurant II',        jp:'おいしい！'},
+  {id:'m3',  no:3,  week:'Woche 3',     title:'Zahlen & Yen',         jp:'いくらですか',     stamp:'いくら\nですか', ready:true},
+  {id:'m4',  no:4,  week:'Woche 4',     title:'Konbini',              jp:'コンビニ',         stamp:'コンビニ', ready:true},
+  {id:'m5',  no:5,  week:'Woche 5',     title:'Restaurant I',         jp:'いらっしゃいませ', stamp:'メニュー', ready:true},
+  {id:'m6',  no:6,  week:'Woche 6',     title:'Restaurant II',        jp:'おいしい！',       stamp:'おいし\nい！', ready:true},
   {id:'m7',  no:7,  week:'Woche 7',     title:'Anime-Abend',          jp:'アニメ'},
   {id:'m8',  no:8,  week:'Woche 8',     title:'Bahnhof & Shinkansen', jp:'しんかんせん'},
   {id:'m9',  no:9,  week:'Woche 9',     title:'Nach dem Weg fragen',  jp:'どこですか'},
@@ -345,7 +345,100 @@ const ITEMS = [
   {id:'k-chi', type:'k', m:'m2', jp:'ち', ro:'chi', tip:'Eine gespiegelte 5: Chi wie Chili. Gesprochen „tschi“.'},
   {id:'k-tsu', type:'k', m:'m2', jp:'つ', ro:'tsu', tip:'Eine Welle: Tsu wie Tsunami.'},
   {id:'k-te',  type:'k', m:'m2', jp:'て', ro:'te',  tip:'Ein T mit hängendem Ärmel: Te wie Tee.'},
-  {id:'k-to',  type:'k', m:'m2', jp:'と', ro:'to',  tip:'Eine Tomate am Stiel, mit Dorn: To!'}
+  {id:'k-to',  type:'k', m:'m2', jp:'と', ro:'to',  tip:'Eine Tomate am Stiel, mit Dorn: To!'},
+
+  // ---------- Mission 3: Zahlen & Yen ----------
+  {id:'m3-1',  type:'p', m:'m3', em:'1️⃣', jp:'いち', ro:'ichi', de:'Eins (1)', note:'Die Grundlage für alles, was ihr bezahlt.'},
+  {id:'m3-2',  type:'p', m:'m3', em:'2️⃣', jp:'に', ro:'ni', de:'Zwei (2)', note:'Kurz und knapp: ni.'},
+  {id:'m3-3',  type:'p', m:'m3', em:'3️⃣', jp:'さん', ro:'san', de:'Drei (3)', note:'Klingt wie die höfliche Anrede ～さん, ist aber die Zahl.'},
+  {id:'m3-4',  type:'p', m:'m3', em:'4️⃣', jp:'よん', ro:'yon', de:'Vier (4)', note:'Es gibt auch し (shi). Das klingt wie „Tod“, deshalb sagt man meist よん.'},
+  {id:'m3-5',  type:'p', m:'m3', em:'5️⃣', jp:'ご', ro:'go', de:'Fünf (5)', note:'Go! Wie beim Startschuss.'},
+  {id:'m3-6',  type:'p', m:'m3', em:'6️⃣', jp:'ろく', ro:'roku', de:'Sechs (6)', note:'Das u am Ende ist kaum hörbar: rok.'},
+  {id:'m3-7',  type:'p', m:'m3', em:'7️⃣', jp:'なな', ro:'nana', de:'Sieben (7)', note:'Es gibt auch しち (shichi). なな ist häufiger und eindeutiger.'},
+  {id:'m3-8',  type:'p', m:'m3', em:'8️⃣', jp:'はち', ro:'hachi', de:'Acht (8)', note:'Wie der berühmte treue Hund Hachikō in Tokio.'},
+  {id:'m3-9',  type:'p', m:'m3', em:'9️⃣', jp:'きゅう', ro:'kyū', de:'Neun (9)', note:'Langes u: kyuu.'},
+  {id:'m3-10', type:'p', m:'m3', em:'🔟', jp:'じゅう', ro:'jū', de:'Zehn (10)', note:'Ab hier wird gebaut: じゅういち = 11, にじゅう = 20.'},
+  {id:'m3-100', type:'p', m:'m3', em:'💯', jp:'ひゃく', ro:'hyaku', de:'Hundert (100)', note:'ごひゃく = 500, die große Münze.'},
+  {id:'m3-1000', type:'p', m:'m3', em:'💴', jp:'せん', ro:'sen', de:'Tausend (1.000)', note:'Der kleinste Geldschein ist せんえん (1.000 Yen).'},
+  {id:'m3-10000', type:'p', m:'m3', em:'💰', jp:'いちまん', ro:'ichiman', de:'Zehntausend (10.000)', note:'Japanisch zählt in Zehntausendern (まん). Der größte Schein ist いちまんえん.'},
+  {id:'m3-ikura', type:'p', m:'m3', em:'🏷️', jp:'いくらですか', ro:'ikura desu ka', de:'Wie viel kostet das?', note:'Dazu einfach auf die Sache zeigen.'},
+  {id:'m3-senen', type:'p', m:'m3', em:'🧾', jp:'せんえん です', ro:'sen en desu', de:'Das macht 1.000 Yen', note:'So nennt man euch den Preis. えん = Yen.'},
+
+  // ---------- Mission 4: Konbini ----------
+  {id:'m4-irasshai', type:'p', m:'m4', em:'🏪', jp:'いらっしゃいませ', ro:'irasshaimase', de:'Willkommen! (vom Personal)', note:'Hört ihr in jedem Laden. Man antwortet nicht darauf, ein Nicken reicht.'},
+  {id:'m4-kore', type:'p', m:'m4', em:'👉', jp:'これを ください', ro:'kore o kudasai', de:'Das hier, bitte', note:'これ = das hier. Zeigen und fertig.'},
+  {id:'m4-nan', type:'p', m:'m4', em:'❓', jp:'これは なんですか', ro:'kore wa nan desu ka', de:'Was ist das?', note:'Perfekt vor dem Onigiri-Regal.'},
+  {id:'m4-onigiri', type:'p', m:'m4', em:'🍙', jp:'おにぎり', ro:'onigiri', de:'Reisbällchen', note:'Das Konbini-Frühstück. Tipp: an der Folie den Nummern 1, 2, 3 nach aufziehen.'},
+  {id:'m4-ocha', type:'p', m:'m4', em:'🍵', jp:'おちゃ', ro:'ocha', de:'Grüner Tee', note:'Meist ungesüßt aus der Flasche.'},
+  {id:'m4-mizu', type:'p', m:'m4', em:'💧', jp:'みず', ro:'mizu', de:'Wasser', note:'Höflicher: おみず (omizu).'},
+  {id:'m4-aisu', type:'p', m:'m4', em:'🍦', jp:'アイスクリーム', ro:'aisukurīmu', de:'Eiscreme', note:'Englisch auf Japanisch, in Katakana geschrieben. Kurz: アイス.'},
+  {id:'m4-fukuro', type:'p', m:'m4', em:'🛍️', jp:'ふくろは いりますか', ro:'fukuro wa irimasu ka', de:'Brauchen Sie eine Tüte?', note:'Die Frage an der Kasse. Antwort: だいじょうぶです (nein danke) oder はい、おねがいします.'},
+  {id:'m4-atatame', type:'p', m:'m4', em:'♨️', jp:'あたためますか', ro:'atatamemasu ka', de:'Soll ich es aufwärmen?', note:'Bei Bento und Snacks. Die Mikrowelle steht hinter der Kasse.'},
+  {id:'m4-hai-onegai', type:'p', m:'m4', em:'🙆', jp:'はい、おねがいします', ro:'hai, onegaishimasu', de:'Ja, bitte', note:'Die freundliche Ja-Antwort auf jede Frage an der Kasse.'},
+  {id:'m4-card', type:'p', m:'m4', em:'💳', jp:'カードで おねがいします', ro:'kādo de onegaishimasu', de:'Mit Karte, bitte', note:'で = mit, womit man etwas macht.'},
+  {id:'m4-cash', type:'p', m:'m4', em:'💵', jp:'げんきんで おねがいします', ro:'genkin de onegaishimasu', de:'Bar, bitte', note:'Geld legt man in das kleine Tablett, nicht in die Hand.'},
+  {id:'m4-hashi', type:'p', m:'m4', em:'🥢', jp:'おはしを ください', ro:'ohashi o kudasai', de:'Stäbchen, bitte', note:'を spricht man „o“.'},
+
+  // ---------- Mission 5: Restaurant I ----------
+  {id:'m5-nanmei', type:'p', m:'m5', em:'🧑‍🍳', jp:'なんめいさまですか', ro:'nanmei-sama desu ka', de:'Wie viele Personen?', note:'Die erste Frage am Eingang. Oft zeigt das Personal dazu Finger.'},
+  {id:'m5-yonin', type:'p', m:'m5', em:'👨‍👩‍👧‍👧', jp:'よにんです', ro:'yonin desu', de:'Wir sind vier', note:'よにん = vier Personen. Dazu vier Finger zeigen.'},
+  {id:'m5-menu', type:'p', m:'m5', em:'📖', jp:'メニューを おねがいします', ro:'menyū o onegaishimasu', de:'Die Speisekarte, bitte', note:'メニュー ist das englische „menu“ auf Japanisch.'},
+  {id:'m5-eigo-menu', type:'p', m:'m5', em:'🇬🇧', jp:'えいごの メニューは ありますか', ro:'eigo no menyū wa arimasu ka', de:'Gibt es eine englische Karte?', note:'Oft gibt es eine, oder Bilder.'},
+  {id:'m5-osusume', type:'p', m:'m5', em:'⭐', jp:'おすすめは なんですか', ro:'osusume wa nan desu ka', de:'Was empfehlen Sie?', note:'Der Joker, wenn die Karte nur aus Kanji besteht.'},
+  {id:'m5-hitotsu', type:'p', m:'m5', em:'☝️', jp:'ひとつ', ro:'hitotsu', de:'Eins (Stück)', note:'Mit つ zählt man Dinge. Im Restaurant reicht das fast immer.'},
+  {id:'m5-futatsu', type:'p', m:'m5', em:'✌️', jp:'ふたつ', ro:'futatsu', de:'Zwei (Stück)', note:'ふたつ = zwei Stück, egal was.'},
+  {id:'m5-mittsu', type:'p', m:'m5', em:'🤟', jp:'みっつ', ro:'mittsu', de:'Drei (Stück)', note:'Mit kleiner Pause vor dem ts: mit-tsu.'},
+  {id:'m5-yottsu', type:'p', m:'m5', em:'🖖', jp:'よっつ', ro:'yottsu', de:'Vier (Stück)', note:'Genau richtig für eure Familie.'},
+  {id:'m5-kore-hitotsu', type:'p', m:'m5', em:'🍜', jp:'これを ひとつ おねがいします', ro:'kore o hitotsu onegaishimasu', de:'Davon eins, bitte', note:'Der Bestellsatz schlechthin. Mit ふたつ, みっつ … tauschen.'},
+  {id:'m5-omizu', type:'p', m:'m5', em:'🚰', jp:'おみずを ください', ro:'omizu o kudasai', de:'Wasser, bitte', note:'Leitungswasser oder Tee bekommt ihr meist kostenlos.'},
+  {id:'m5-kodomo', type:'p', m:'m5', em:'🧒', jp:'こどもの メニューは ありますか', ro:'kodomo no menyū wa arimasu ka', de:'Gibt es ein Kindermenü?', note:'こども = Kind. Gerade in Familienrestaurants gibt es oft eins.'},
+
+  // ---------- Mission 6: Restaurant II ----------
+  {id:'m6-oishii', type:'p', m:'m6', em:'😋', jp:'おいしい！', ro:'oishii!', de:'Lecker!', note:'Der Satz, der jede Küche glücklich macht.'},
+  {id:'m6-totemo', type:'p', m:'m6', em:'🤩', jp:'とても おいしいです', ro:'totemo oishii desu', de:'Sehr lecker', note:'とても = sehr. Die höfliche Steigerung.'},
+  {id:'m6-ramen', type:'p', m:'m6', em:'🍜', jp:'ラーメン', ro:'rāmen', de:'Ramen (Nudelsuppe)', note:'Oft bestellt man am Automaten am Eingang und gibt das Ticket ab. Schlürfen ist erlaubt!'},
+  {id:'m6-sushi', type:'p', m:'m6', em:'🍣', jp:'すし', ro:'sushi', de:'Sushi', note:'Am Laufband (かいてんずし) bezahlt man nach Tellern.'},
+  {id:'m6-gyoza', type:'p', m:'m6', em:'🥟', jp:'ぎょうざ', ro:'gyōza', de:'Teigtaschen', note:'Kinderliebling, oft als Beilage zu Ramen.'},
+  {id:'m6-karaage', type:'p', m:'m6', em:'🍗', jp:'からあげ', ro:'karaage', de:'Frittiertes Hähnchen', note:'Gibt es auch im Konbini, heiß an der Kasse.'},
+  {id:'m6-karai', type:'p', m:'m6', em:'🌶️', jp:'からいですか', ro:'karai desu ka', de:'Ist das scharf?', note:'からい = scharf. Nicht verwechseln mit からあげ!'},
+  {id:'m6-mou', type:'p', m:'m6', em:'➕', jp:'もう ひとつ おねがいします', ro:'mō hitotsu onegaishimasu', de:'Noch eins, bitte', note:'もう = noch. Funktioniert auch mit ふたつ.'},
+  {id:'m6-onaka', type:'p', m:'m6', em:'🫃', jp:'おなかが いっぱいです', ro:'onaka ga ippai desu', de:'Ich bin satt', note:'Wörtlich: Der Bauch ist voll.'},
+  {id:'m6-kanpai', type:'p', m:'m6', em:'🥂', jp:'かんぱい！', ro:'kanpai!', de:'Prost!', note:'Für euren Geburtstagsabend in Kyoto.'},
+  {id:'m6-okaikei', type:'p', m:'m6', em:'🧾', jp:'おかいけいを おねがいします', ro:'okaikei o onegaishimasu', de:'Die Rechnung, bitte', note:'Bezahlt wird meist vorne an der Kasse, nicht am Tisch. Trinkgeld gibt man nicht.'},
+  {id:'m6-card-ok', type:'p', m:'m6', em:'💳', jp:'カードは つかえますか', ro:'kādo wa tsukaemasu ka', de:'Kann ich mit Karte zahlen?', note:'Kleine Lokale nehmen oft nur Bargeld.'},
+
+  // ---------- Hiragana Teil 2 ----------
+  {id:'k-na', type:'k', m:'m3', jp:'な', ro:'na', tip:'Ein Kreuz mit einem Knoten daneben: Na, wer hat da geknotet?'},
+  {id:'k-ni', type:'k', m:'m3', jp:'に', ro:'ni', tip:'Ein Strich und daneben zwei Striche wie ein angewinkeltes Knie: ni.'},
+  {id:'k-nu', type:'k', m:'m3', jp:'ぬ', ro:'nu', tip:'Nudeln mit einer Schlaufe am Ende: nu.'},
+  {id:'k-ne', type:'k', m:'m3', jp:'ね', ro:'ne', tip:'Eine Katze (neko) mit eingerolltem Schwanz: ne.'},
+  {id:'k-no', type:'k', m:'m3', jp:'の', ro:'no', tip:'Ein durchgestrichener Kreis wie ein Verbotsschild: No!'},
+  {id:'k-ha', type:'k', m:'m3', jp:'は', ro:'ha', tip:'Links ein Strich, rechts ein Haken mit Schlaufe: ha. Als Wörtchen nach einem Wort spricht man es „wa“.'},
+  {id:'k-hi', type:'k', m:'m3', jp:'ひ', ro:'hi', tip:'Ein grinsender Mund: hi-hi!'},
+  {id:'k-fu', type:'k', m:'m3', jp:'ふ', ro:'fu', tip:'Der Berg Fuji mit Wolken drumherum: fu.'},
+  {id:'k-he', type:'k', m:'m3', jp:'へ', ro:'he', tip:'Ein Dachgiebel: he wie Heu auf dem Dach.'},
+  {id:'k-ho', type:'k', m:'m3', jp:'ほ', ro:'ho', tip:'Wie は, aber mit Extra-Strich oben: der Weihnachtsmann mit Gürtel, ho-ho.'},
+  {id:'k-ma', type:'k', m:'m4', jp:'ま', ro:'ma', tip:'Eine Mama mit Schleife im Haar: ma.'},
+  {id:'k-mi', type:'k', m:'m4', jp:'み', ro:'mi', tip:'Eine geschwungene 21 wie eine Musiknote: mi.'},
+  {id:'k-mu', type:'k', m:'m4', jp:'む', ro:'mu', tip:'Eine Kuh mit Schnauze und Hörnchen: muh!'},
+  {id:'k-me', type:'k', m:'m4', jp:'め', ro:'me', tip:'Ein Auge mit Wimper. め heißt auf Japanisch sogar „Auge“.'},
+  {id:'k-mo', type:'k', m:'m4', jp:'も', ro:'mo', tip:'Ein Angelhaken mit zwei Querstrichen: mo, noch mehr Fische!'},
+  {id:'k-ya', type:'k', m:'m4', jp:'や', ro:'ya', tip:'Ein Yak mit Horn: ya.'},
+  {id:'k-yu', type:'k', m:'m4', jp:'ゆ', ro:'yu', tip:'Ein Fisch, der sich umdreht. ゆ steht auch auf jedem Onsen-Vorhang: heißes Wasser.'},
+  {id:'k-yo', type:'k', m:'m4', jp:'よ', ro:'yo', tip:'Ein Jo-Jo an der Schnur: yo.'},
+  {id:'k-ra', type:'k', m:'m5', jp:'ら', ro:'ra', tip:'Eine 5 mit Kappe auf, wie ein Rapper: ra.'},
+  {id:'k-ri', type:'k', m:'m5', jp:'り', ro:'ri', tip:'Zwei lange Stäbe wie Riesenbeine: ri.'},
+  {id:'k-ru', type:'k', m:'m5', jp:'る', ro:'ru', tip:'Eine Rutsche mit Kringel am Ende: ru.'},
+  {id:'k-re', type:'k', m:'m5', jp:'れ', ro:'re', tip:'Ein Mann, der mit Stock davonrennt: re.'},
+  {id:'k-ro', type:'k', m:'m5', jp:'ろ', ro:'ro', tip:'Wie る, nur ohne Kringel: die Rodelbahn ohne Ende, ro.'},
+  {id:'k-wa', type:'k', m:'m5', jp:'わ', ro:'wa', tip:'Eine Welle, die gegen die Wand schwappt: wa.'},
+  {id:'k-wo', type:'k', m:'m5', jp:'を', ro:'o (wo)', tip:'Gesprochen wie お. Kommt nur als Wörtchen vor: ラーメンを ください.'},
+  {id:'k-n',  type:'k', m:'m5', jp:'ん', ro:'n', tip:'Ein kleines n mit Schwung: das einzige Zeichen ohne Vokal.'},
+  {id:'k-ga', type:'k', m:'m6', jp:'が', ro:'ga', tip:'か plus zwei kleine Striche (ten-ten) wird weich: ga.'},
+  {id:'k-za', type:'k', m:'m6', jp:'ざ', ro:'za', tip:'さ plus ten-ten: za.'},
+  {id:'k-da', type:'k', m:'m6', jp:'だ', ro:'da', tip:'た plus ten-ten: da.'},
+  {id:'k-ba', type:'k', m:'m6', jp:'ば', ro:'ba', tip:'は plus ten-ten: ba.'},
+  {id:'k-pa', type:'k', m:'m6', jp:'ぱ', ro:'pa', tip:'は plus kleiner Kreis (maru): pa.'}
 ];
 
 /* =========================================================================
@@ -829,7 +922,7 @@ function renderHome() {
 
 function storageNote() {
   const warn = !storageOK ? `<p class="banner">Dieser Browser kann nichts speichern (privates Fenster?). Mit Familien-Login bleibt der Fortschritt trotzdem in der Familien-Datenbank.</p>` : '';
-  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.6</p>`;
+  return `${warn}<p class="foot"><span class="sync-text">${esc(Sync.text())}</span> · Version 0.7</p>`;
 }
 function renderLogin() {
   return `
