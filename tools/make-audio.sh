@@ -1,17 +1,22 @@
 #!/bin/bash
-# Japan-Trainer: Aussprache-Dateien mit der Mac-Stimme "Kyoko (Erweitert)" erzeugen.
+# Japan-Trainer: Aussprache-Dateien mit einer erweiterten japanischen Mac-Stimme (bevorzugt O-ren) erzeugen.
 # Aufruf im Terminal:  bash <(curl -fsSL https://x2snka.github.io/Japan-trainer/tools/make-audio.sh)
 set -e
 BASE="https://x2snka.github.io/Japan-trainer"
 OUT="$HOME/Japan-Audio"
 mkdir -p "$OUT/files"
 
-VOICE=$(say -v '?' | grep 'ja_JP' | grep -Ei 'premium|enhanced|erweitert' | head -1 | sed -E 's/[[:space:]]{2,}.*//')
+# Bevorzugt O-ren, sonst jede andere erweiterte/Premium-Stimme. Eigene Wahl: VOICE="Name" vor den Befehl setzen.
+GOOD=$(say -v '?' | grep 'ja_JP' | grep -Ei 'premium|enhanced|erweitert')
+if [ -z "$VOICE" ]; then
+  VOICE=$(echo "$GOOD" | grep -i 'o-ren' | head -1 | sed -E 's/[[:space:]]{2,}.*//')
+  [ -z "$VOICE" ] && VOICE=$(echo "$GOOD" | head -1 | sed -E 's/[[:space:]]{2,}.*//')
+fi
 if [ -z "$VOICE" ]; then
   echo ""
   echo "Keine erweiterte japanische Stimme auf diesem Mac gefunden."
   echo "Bitte laden: Systemeinstellungen > Bedienungshilfen > Gesprochene Inhalte >"
-  echo "Systemstimme > Stimmen verwalten > Japanisch > Kyoko (Erweitert). Danach erneut starten."
+  echo "Systemstimme > Stimmen verwalten > Japanisch > O-ren (Erweitert). Danach erneut starten."
   exit 1
 fi
 echo "Stimme: $VOICE"
