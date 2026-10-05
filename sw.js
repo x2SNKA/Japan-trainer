@@ -1,5 +1,5 @@
 /* Offline-Unterstützung: App-Dateien werden zwischengespeichert, Lernstände laufen nie über den Cache. */
-const CACHE = 'japan-trainer-v0.7';
+const CACHE = 'japan-trainer-v0.8';
 const SHELL = ['./', 'index.html', 'supabase.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
